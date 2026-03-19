@@ -25,7 +25,7 @@ export class VaultActivityDashboardView extends ItemView {
 	}
 
 	getDisplayText(): string {
-		return "Vault activity";
+		return "Vault Activity";
 	}
 
 	getIcon(): string {
