@@ -1,0 +1,11 @@
+# npm
+node_modules
+
+# Don't format the compiled main.js file
+main.js
+
+# Don't format obsidian data files
+data.json
+
+# Don't format Vitest test coverage reports
+coverage/

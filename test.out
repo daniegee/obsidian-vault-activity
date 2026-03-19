@@ -1,0 +1,24 @@
+
+> obsidian-vault-activity@1.0.0 test
+> vitest run
+
+
+[1m[46m RUN [49m[22m [36mv4.1.0 [39m[90mC:/Users/danie/Downloads/repos/obsidian-vault-activity[39m
+
+ [32m✓[39m tests/streakPanel.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m tests/trendChart.interaction.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 22[2mms[22m[39m
+ [32m✓[39m tests/main.refresh.smoke.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m tests/userSettings.behavior.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m tests/activityTrends.behavior.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 167[2mms[22m[39m
+ [32m✓[39m tests/activityHighlights.behavior.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 230[2mms[22m[39m
+ [32m✓[39m tests/drillDown.behavior.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 136[2mms[22m[39m
+ [32m✓[39m tests/dashboardView.smoke.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 61[2mms[22m[39m
+ [32m✓[39m tests/date.edgecases.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/indexer.workflow.smoke.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m tests/aggregates.test.ts [2m([22m[2m15 tests[22m[2m)[22m[33m 471[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m11 passed[39m[22m[90m (11)[39m
+[2m      Tests [22m [1m[32m54 passed[39m[22m[90m (54)[39m
+[2m   Start at [22m 08:20:27
+[2m   Duration [22m 1.31s[2m (transform 1.21s, setup 0ms, import 2.53s, tests 1.14s, environment 2ms)[22m
+

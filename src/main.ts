@@ -1,99 +1,195 @@
-import {App, Editor, MarkdownView, Modal, Notice, Plugin} from 'obsidian';
-import {DEFAULT_SETTINGS, MyPluginSettings, SampleSettingTab} from "./settings";
+import { Notice, Plugin, WorkspaceLeaf } from "obsidian";
+import {
+	VaultActivityIndexer,
+	filterByTrackedMarkdown,
+} from "./indexer/vaultIndexer";
+import { DEFAULT_SETTINGS, VaultActivitySettingTab } from "./settings";
+import type {
+	IndexerResult,
+	VaultActivityPluginData,
+	VaultActivityPluginSettings,
+} from "./types";
+import {
+	VaultActivityDashboardView,
+	VIEW_TYPE_VAULT_ACTIVITY,
+} from "./ui/DashboardView";
 
-// Remember to rename these classes and interfaces!
+export default class VaultActivityPlugin extends Plugin {
+	settings: VaultActivityPluginSettings = DEFAULT_SETTINGS;
+	snapshots: VaultActivityPluginData["snapshots"] = {};
 
-export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+	private latestIndex: IndexerResult | null = null;
+	private readonly views = new Set<VaultActivityDashboardView>();
+	private refreshTimer: ReturnType<typeof globalThis.setTimeout> | null =
+		null;
+	private refreshInFlight: Promise<void> | null = null;
 
-	async onload() {
-		await this.loadSettings();
+	async onload(): Promise<void> {
+		await this.loadPluginData();
 
-		// This creates an icon in the left ribbon.
-		this.addRibbonIcon('dice', 'Sample', (evt: MouseEvent) => {
-			// Called when the user clicks the icon.
-			new Notice('This is a notice!');
+		this.addSettingTab(new VaultActivitySettingTab(this.app, this));
+
+		this.registerView(
+			VIEW_TYPE_VAULT_ACTIVITY,
+			(leaf) => new VaultActivityDashboardView(leaf, this),
+		);
+
+		this.addRibbonIcon("activity", "Open vault activity", async () => {
+			await this.openDashboard();
 		});
 
-		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('Status bar text');
-
-		// This adds a simple command that can be triggered anywhere
 		this.addCommand({
-			id: 'open-modal-simple',
-			name: 'Open modal (simple)',
-			callback: () => {
-				new SampleModal(this.app).open();
-			}
+			id: "open-dashboard",
+			name: "Open dashboard",
+			callback: async () => this.openDashboard(),
 		});
-		// This adds an editor command that can perform some operation on the current editor instance
+
 		this.addCommand({
-			id: 'replace-selected',
-			name: 'Replace selected content',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				editor.replaceSelection('Sample editor command');
+			id: "refresh-dashboard-data",
+			name: "Refresh dashboard data",
+			callback: async () => this.refreshIndex("command"),
+		});
+
+		this.registerEvent(
+			this.app.vault.on("modify", (file) =>
+				this.handleVaultChange("modify", file),
+			),
+		);
+		this.registerEvent(
+			this.app.vault.on("create", (file) =>
+				this.handleVaultChange("create", file),
+			),
+		);
+		this.registerEvent(
+			this.app.vault.on("delete", (file) =>
+				this.handleVaultChange("delete", file),
+			),
+		);
+		this.registerEvent(
+			this.app.vault.on("rename", (file) =>
+				this.handleVaultChange("rename", file),
+			),
+		);
+
+		await this.refreshIndex("startup", true);
+	}
+
+	onunload(): void {
+		if (this.refreshTimer != null) {
+			globalThis.clearTimeout(this.refreshTimer);
+			this.refreshTimer = null;
+		}
+	}
+
+	registerDashboardView(view: VaultActivityDashboardView): void {
+		this.views.add(view);
+		if (this.latestIndex) {
+			view.setIndexResult(this.latestIndex);
+		}
+	}
+
+	unregisterDashboardView(view: VaultActivityDashboardView): void {
+		this.views.delete(view);
+	}
+
+	async persistSettings(): Promise<void> {
+		await this.savePluginData();
+	}
+
+	scheduleRefresh(reason: string, immediate = false): void {
+		if (!this.settings.autoRefresh && !immediate) {
+			return;
+		}
+
+		if (this.refreshTimer != null) {
+			globalThis.clearTimeout(this.refreshTimer);
+			this.refreshTimer = null;
+		}
+
+		const delay = immediate ? 0 : this.settings.refreshDebounceMs;
+		this.refreshTimer = globalThis.setTimeout(() => {
+			this.refreshTimer = null;
+			void this.refreshIndex(reason);
+		}, delay);
+	}
+
+	async refreshIndex(reason: string, silent = false): Promise<void> {
+		if (this.refreshInFlight != null) {
+			await this.refreshInFlight;
+			return;
+		}
+
+		this.refreshInFlight = (async () => {
+			const indexer = new VaultActivityIndexer(
+				this.app.vault,
+				this.settings,
+				this.snapshots,
+			);
+			const nextIndex = await indexer.fullScan();
+			this.snapshots = nextIndex.snapshots;
+			this.latestIndex = nextIndex;
+			await this.savePluginData();
+			this.views.forEach((view) => view.setIndexResult(nextIndex));
+			if (!silent) {
+				new Notice(
+					`Vault activity refreshed${reason ? ` (${reason})` : ""}.`,
+				);
 			}
-		});
-		// This adds a complex command that can check whether the current state of the app allows execution of the command
-		this.addCommand({
-			id: 'open-modal-complex',
-			name: 'Open modal (complex)',
-			checkCallback: (checking: boolean) => {
-				// Conditions to check
-				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-				if (markdownView) {
-					// If checking is true, we're simply "checking" if the command can be run.
-					// If checking is false, then we want to actually perform the operation.
-					if (!checking) {
-						new SampleModal(this.app).open();
-					}
+		})();
 
-					// This command will only show up in Command Palette when the check function returns true
-					return true;
-				}
-				return false;
-			}
-		});
-
-		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
-
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			new Notice("Click");
-		});
-
-		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
-
+		try {
+			await this.refreshInFlight;
+		} finally {
+			this.refreshInFlight = null;
+		}
 	}
 
-	onunload() {
+	async openDashboard(): Promise<void> {
+		let leaf: WorkspaceLeaf | null = null;
+		const existingLeaves = this.app.workspace.getLeavesOfType(
+			VIEW_TYPE_VAULT_ACTIVITY,
+		);
+		if (existingLeaves.length > 0) {
+			leaf = existingLeaves[0] ?? null;
+		} else {
+			leaf = this.app.workspace.getRightLeaf(false);
+			await leaf?.setViewState({
+				type: VIEW_TYPE_VAULT_ACTIVITY,
+				active: true,
+			});
+		}
+
+		if (leaf) {
+			void this.app.workspace.revealLeaf(leaf);
+		}
 	}
 
-	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData() as Partial<MyPluginSettings>);
+	private async loadPluginData(): Promise<void> {
+		const rawData =
+			(await this.loadData()) as Partial<VaultActivityPluginData> | null;
+		this.settings = {
+			...DEFAULT_SETTINGS,
+			...(rawData?.settings ?? undefined),
+		};
+		this.snapshots = rawData?.snapshots ?? {};
 	}
 
-	async saveSettings() {
-		await this.saveData(this.settings);
-	}
-}
-
-class SampleModal extends Modal {
-	constructor(app: App) {
-		super(app);
+	private async savePluginData(): Promise<void> {
+		await this.saveData({
+			settings: this.settings,
+			snapshots: this.snapshots,
+		} satisfies VaultActivityPluginData);
 	}
 
-	onOpen() {
-		let {contentEl} = this;
-		contentEl.setText('Woah!');
-	}
+	private handleVaultChange(reason: string, file: unknown): void {
+		if (reason === "delete" && filterByTrackedMarkdown(file)) {
+			delete this.snapshots[file.path];
+			this.scheduleRefresh(reason, true);
+			return;
+		}
 
-	onClose() {
-		const {contentEl} = this;
-		contentEl.empty();
+		if (filterByTrackedMarkdown(file)) {
+			this.scheduleRefresh(reason);
+		}
 	}
 }

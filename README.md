@@ -1,90 +1,134 @@
-# Obsidian Sample Plugin
+# Vault Activity for Obsidian
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+<p align="left">
+  <a href="#"><img alt="Obsidian" src="https://img.shields.io/badge/Obsidian-Plugin-7C3AED?style=flat-square"></a>
+  <a href="#"><img alt="Min Obsidian" src="https://img.shields.io/badge/Min%20App-1.5.0-0EA5E9?style=flat-square"></a>
+  <a href="#"><img alt="Version" src="https://img.shields.io/badge/Version-0.1.0-10B981?style=flat-square"></a>
+</p>
 
-This project uses TypeScript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in TypeScript Definition format, which contains TSDoc comments describing what it does.
+Turn your vault into a tiny analytics lab: streaks, trends, and click-through note lists that answer the important question:
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open modal (simple)" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+**"Am I writing consistently, or just collecting tabs?"**
 
-## First time developing plugins?
+Vault Activity is an Obsidian plugin that tracks **new note** and **modified note** activity, then visualises it in a dashboard designed for quick daily check-ins.
 
-Quick starting guide for new plugin devs:
+## Why this plugin exists
 
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `main.ts` to `main.js`.
-- Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+Most writing habits fail quietly. This plugin helps you catch drift early by making activity visible:
 
-## Releasing new releases
+- Current streak and longest streak
+- Most active weekday and rhythm-style summary - understand your note habits at a glance
+- Trend chart with multiple time windows
+- Drill-down list of notes behind each chart point
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
+> [!NOTE]
+> Following Zettlekasten, I found it difficult to maintain a consistent and balanced pace between new fleeting note news and
 
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
+## Features
 
-## Adding your plugin to the community plugin list
+### 1) Dashboard at a glance
 
-- Check the [plugin guidelines](https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines).
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+- Streak stats and activity highlights
+- Weekly, monthly, yearly, and all-time trend windows
+- Toggle between **New notes** and **Modified notes** metrics
 
-## How to use
+### 2) Drill-down details
 
-- Clone this repo.
-- Make sure your NodeJS is at least v16 (`node --version`).
-- `npm i` or `yarn` to install dependencies.
-- `npm run dev` to start compilation in watch mode.
+- Weekly/monthly windows: click a day to list matching notes
+- Yearly/all-time windows: click a week/month bucket to inspect grouped notes
 
-## Manually installing the plugin
+### 3) Flexible configuration that makes sense for your vault
 
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
+- Set the conditions for your streak and stats
+- New notes use frontmatter property (default: `Date`), then fallback to file creation time
+- Modified notes use frontmatter property (default: `Last modified`)
+- If modified property is missing, the plugin falls back to meaningful edit detection
+- Include and exclude folder filters apply across all dashboard surfaces
 
-## Improve code quality with eslint
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code. 
-- This project already has eslint preconfigured, you can invoke a check by running`npm run lint`
-- Together with a custom eslint [plugin](https://github.com/obsidianmd/eslint-plugin) for Obsidan specific code guidelines.
-- A GitHub action is preconfigured to automatically lint every commit on all branches.
+## Install
 
-## Funding URL
+This plugin is currently set up as a local/community plugin workflow.
 
-You can include funding URLs where people who use your plugin can financially support it.
+## Usage
 
-The simple way is to set the `fundingUrl` field to your link in your `manifest.json` file:
+### Commands
 
-```json
-{
-    "fundingUrl": "https://buymeacoffee.com"
-}
+- `Open Vault Activity`
+- `Refresh Vault Activity data`
+
+### Obsidian Settings
+
+| Setting                   | What it does                                        | Default            |
+| ------------------------- | --------------------------------------------------- | ------------------ |
+| Dashboard include folders | Optional allow-list scope for all visuals and lists | Empty              |
+| Dashboard exclude folders | Exclude scope used when include list is empty       | `Templates`        |
+| Streak calculation mode   | Choose what marks a day active                      | `new-and-modified` |
+| Created date property     | Frontmatter key for new-note timestamps             | `Date`             |
+| Modified date property    | Frontmatter key for modified-note timestamps        | `Last modified`    |
+| Auto-refresh              | Recompute on create/modify/delete/rename events     | `true`             |
+| Refresh debounce (ms)     | Delay before recomputing after events               | `400`              |
+
+## Important behavior notes
+
+> [!IMPORTANT]
+> Obsidian provides the current modified time for files, not a full historical timeline of every edit event.
+> The dashboard therefore represents each note's latest known activity position, not a complete per-edit history.
+
+> [!NOTE]
+> Meaningful-edit filtering is most accurate after the plugin has at least one prior snapshot to compare against.
+> On first install, non-empty notes may be treated as meaningful because no baseline snapshot exists yet.
+
+## Limitations
+
+- Desktop only (`isDesktopOnly: true`)
+- Yearly/all-time drill-down aggregates by week or month buckets
+- One selected drill-down point is shown at a time
+
+## Privacy
+
+Vault Activity is local-first:
+
+- No external analytics
+- No remote data sync by this plugin
+- Data is stored using Obsidian plugin storage for local snapshots/settings
+
+## Development
+
+### Scripts
+
+```bash
+npm run dev            # watch/dev build
+npm run build          # production build
+npm run lint           # eslint
+npm run test           # vitest
+npm run test:coverage  # vitest with coverage
+npm run format         # prettier
 ```
 
-If you have multiple URLs, you can also do:
+### Tech stack
 
-```json
-{
-    "fundingUrl": {
-        "Buy Me a Coffee": "https://buymeacoffee.com",
-        "GitHub Sponsor": "https://github.com/sponsors",
-        "Patreon": "https://www.patreon.com/"
-    }
-}
-```
+- TypeScript
+- Obsidian plugin API
+- esbuild
+- Vitest
 
-## API Documentation
+## Public release checklist
 
-See https://docs.obsidian.md
+- [ ] Handle wider date format compatibility for frontmatter date fields
+- [ ] Add license file
+- [ ] Prepare community plugin release artifacts
+
+## Contributing
+
+Issues and PRs are welcome. If you spot weird date parsing, edge-case folder filters, or suspicious streak behavior, please open an issue with:
+
+- Obsidian version
+- Plugin version
+- Example frontmatter/date format
+- Steps to reproduce
+
+## Author
+
+Created by **daniegee**
+
+If this plugin helps your writing cadence, star the repo and keep the streak alive.
