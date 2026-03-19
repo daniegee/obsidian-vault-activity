@@ -3,7 +3,7 @@
 	"name": "Vault Activity",
 	"version": "1.0.0",
 	"minAppVersion": "1.11.0",
-	"description": "Track your note activity stats with streak highlights and visualisation widgets",
+	"description": "Track your note activity stats with streak highlights and visualisation widgets.",
 	"author": "daniegee",
 	"isDesktopOnly": true
 }
