@@ -23,3 +23,4 @@ data.json
 
 # Vitest test coverage reports
 coverage/
+*.out
