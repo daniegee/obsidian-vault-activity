@@ -6,11 +6,11 @@
   <a href="#"><img alt="GitHub Copilot" src="https://img.shields.io/badge/github_copilot-8957E5?style=flat-square&logo=github-copilot&logoColor=white"></a>
 </p>
 
-Turn your vault into a focused writing analytics lab. Vault Activity tracks streaks, trends, and click-through note lists to answer one useful question:
+Vault Activity tracks streaks, trends, and click-through note lists to answer one useful question:
 
 **"Am I actually revisiting and updating my notes, or just collecting them?"**
 
-Vault Activity is an Obsidian plugin that tracks **new note** and **modified note** activity, then presents it through dashboard widgets built for fast daily check-ins.
+Vault Activity is an Obsidian plugin that tracks note creation and revision activity, then turns it into a dashboard you can scan in seconds.
 
 ## Why this plugin exists
 
