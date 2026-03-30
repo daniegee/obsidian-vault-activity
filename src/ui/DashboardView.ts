@@ -25,20 +25,22 @@ export class VaultActivityDashboardView extends ItemView {
 	}
 
 	getDisplayText(): string {
-		return "Vault Activity";
+		return "Vault activity";
 	}
 
 	getIcon(): string {
 		return "activity";
 	}
 
-	async onOpen(): Promise<void> {
+	onOpen(): Promise<void> {
 		this.plugin.registerDashboardView(this);
 		this.render();
+		return Promise.resolve();
 	}
 
-	async onClose(): Promise<void> {
+	onClose(): Promise<void> {
 		this.plugin.unregisterDashboardView(this);
+		return Promise.resolve();
 	}
 
 	setIndexResult(result: IndexerResult): void {
