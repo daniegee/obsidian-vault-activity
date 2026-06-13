@@ -1,3 +1,5 @@
+## [1.0.4](https://github.com/daniegee/obsidian-vault-activity/compare/1.0.3...1.0.4) (2026-06-13)
+
 ## [1.0.3](https://github.com/daniegee/obsidian-vault-activity/compare/1.0.2...1.0.3) (2026-06-13)
 
 ## [1.0.2](https://github.com/daniegee/obsidian-vault-activity/compare/1.0.1...1.0.2) (2026-06-13)
