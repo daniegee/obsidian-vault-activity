@@ -140,7 +140,15 @@ export function renderTrendChart(
 	const controls = titleRow.createDiv({
 		cls: "vault-activity-trend-controls",
 	});
-	const windows: TimeWindow[] = ["weekly", "monthly", "yearly", "all-time"];
+	const spansMultipleMonths =
+		data.trendMonthlyNewNotes.length >= 2 ||
+		data.trendMonthlyModifiedNotes.length >= 2;
+	const windows: TimeWindow[] = [
+		"weekly",
+		"monthly",
+		"yearly",
+		...(spansMultipleMonths ? (["all-time"] as TimeWindow[]) : []),
+	];
 
 	windows.forEach((option) => {
 		const label =
