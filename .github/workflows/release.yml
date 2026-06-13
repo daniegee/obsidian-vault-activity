@@ -32,9 +32,3 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: npx semantic-release
 
-            - name: Mark release as draft
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              run: |
-                  VERSION=$(node -p "require('./package.json').version")
-                  gh release edit "$VERSION" --draft
