@@ -33,7 +33,7 @@ export function renderDrillDownPanel(
 				: formatDateDisplay(data.filters.selectedDay);
 
 	header.createEl("h3", { text: drilldownTitle });
-	header.createEl("div", {
+	header.createDiv({
 		cls: "vault-activity-panel-meta",
 		text: selectionLabel,
 	});
@@ -42,7 +42,7 @@ export function renderDrillDownPanel(
 		data.filters.trendMetric === "modified-notes"
 			? "modified notes"
 			: "new notes";
-	header.createEl("span", {
+	header.createSpan({
 		cls: "vault-activity-panel-meta",
 		text: `${data.selectedDayNotes.length} ${notesLabel}`,
 	});
