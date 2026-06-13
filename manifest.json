@@ -5,5 +5,5 @@
 	"minAppVersion": "1.11.0",
 	"description": "Track your note activity stats with streak highlights and visualisation widgets.",
 	"author": "daniegee",
-	"isDesktopOnly": true
+	"isDesktopOnly": false
 }

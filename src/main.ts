@@ -20,8 +20,7 @@ export default class VaultActivityPlugin extends Plugin {
 
 	private latestIndex: IndexerResult | null = null;
 	private readonly views = new Set<VaultActivityDashboardView>();
-	private refreshTimer: ReturnType<typeof globalThis.setTimeout> | null =
-		null;
+	private refreshTimer: number | null = null;
 	private refreshInFlight: Promise<void> | null = null;
 
 	async onload(): Promise<void> {
@@ -76,7 +75,7 @@ export default class VaultActivityPlugin extends Plugin {
 
 	onunload(): void {
 		if (this.refreshTimer != null) {
-			globalThis.clearTimeout(this.refreshTimer);
+			window.clearTimeout(this.refreshTimer);
 			this.refreshTimer = null;
 		}
 	}
@@ -102,12 +101,12 @@ export default class VaultActivityPlugin extends Plugin {
 		}
 
 		if (this.refreshTimer != null) {
-			globalThis.clearTimeout(this.refreshTimer);
+			window.clearTimeout(this.refreshTimer);
 			this.refreshTimer = null;
 		}
 
 		const delay = immediate ? 0 : this.settings.refreshDebounceMs;
-		this.refreshTimer = globalThis.setTimeout(() => {
+		this.refreshTimer = window.setTimeout(() => {
 			this.refreshTimer = null;
 			void this.refreshIndex(reason);
 		}, delay);
