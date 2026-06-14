@@ -35,10 +35,11 @@ jobs:
               run: |
                   NEW_VERSION=$(node -p "require('./package.json').version")
 
-                  # If a GitHub release already exists for this version, semantic-release
-                  # didn't create a new one this run (no releasable commits).
-                  if gh release view "$NEW_VERSION" >/dev/null 2>&1; then
-                    echo "Release $NEW_VERSION already exists, nothing to do."
+                  # Only skip if a PUBLISHED (non-draft) release already exists.
+                  # A draft with this tag is expected and should be published below.
+                  IS_DRAFT=$(gh release view "$NEW_VERSION" --json isDraft --jq '.isDraft' 2>/dev/null || echo "not_found")
+                  if [ "$IS_DRAFT" = "false" ]; then
+                    echo "Published release $NEW_VERSION already exists, nothing to do."
                     exit 0
                   fi
 
