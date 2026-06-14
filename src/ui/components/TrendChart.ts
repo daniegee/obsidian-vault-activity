@@ -207,7 +207,7 @@ export function renderTrendChart(
 				);
 			});
 
-			activeWindow.setTimeout(() => onMetricChange(option.id), 170);
+			globalThis.setTimeout(() => onMetricChange(option.id), 170);
 		};
 	});
 
