@@ -9,6 +9,8 @@ export default tseslint.config(
 			globals: {
 				...globals.browser,
 				...globals.node,
+				activeWindow: "readonly",
+				activeDocument: "readonly",
 			},
 			parserOptions: {
 				projectService: {
@@ -40,5 +42,6 @@ export default tseslint.config(
 		"version-bump.mjs",
 		"versions.json",
 		"main.js",
+		"src/main.js",
 	]),
 );
