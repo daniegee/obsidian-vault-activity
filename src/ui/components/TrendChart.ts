@@ -207,7 +207,7 @@ export function renderTrendChart(
 				);
 			});
 
-			globalThis.setTimeout(() => onMetricChange(option.id), 170);
+			activeWindow.setTimeout(() => onMetricChange(option.id), 170);
 		};
 	});
 
@@ -234,14 +234,14 @@ export function renderTrendChart(
 	const CHART_W = 600 - PAD_X * 2;
 	const CHART_H = 160 - PAD_Y * 2;
 
-	const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+	const svg = activeDocument.createElementNS("http://www.w3.org/2000/svg", "svg");
 	svg.setAttribute("viewBox", "0 0 600 180");
 	svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
 	svg.addClass("vault-activity-trend-chart");
 	container.appendChild(svg);
 
 	// Inset group keeps all content away from the SVG boundary so edge nodes aren't clipped.
-	const chartGroup = document.createElementNS(
+	const chartGroup = activeDocument.createElementNS(
 		"http://www.w3.org/2000/svg",
 		"g",
 	);
@@ -250,7 +250,7 @@ export function renderTrendChart(
 
 	const max = Math.max(...newValues, ...modifiedValues, 1);
 
-	const newPolyline = document.createElementNS(
+	const newPolyline = activeDocument.createElementNS(
 		"http://www.w3.org/2000/svg",
 		"polyline",
 	);
@@ -266,7 +266,7 @@ export function renderTrendChart(
 	);
 	chartGroup.appendChild(newPolyline);
 
-	const modifiedPolyline = document.createElementNS(
+	const modifiedPolyline = activeDocument.createElementNS(
 		"http://www.w3.org/2000/svg",
 		"polyline",
 	);
@@ -282,7 +282,7 @@ export function renderTrendChart(
 	);
 	chartGroup.appendChild(modifiedPolyline);
 
-	const dots = document.createElementNS("http://www.w3.org/2000/svg", "g");
+	const dots = activeDocument.createElementNS("http://www.w3.org/2000/svg", "g");
 	chartGroup.appendChild(dots);
 
 	const isAggregated = window === "yearly" || window === "all-time";
@@ -307,7 +307,7 @@ export function renderTrendChart(
 				seriesMetric === "new-notes" ? "new notes" : "modified notes";
 			const seriesLabel = `${point.label}: ${value} ${countLabel}`;
 
-			const group = document.createElementNS(
+			const group = activeDocument.createElementNS(
 				"http://www.w3.org/2000/svg",
 				"g",
 			);
@@ -323,7 +323,7 @@ export function renderTrendChart(
 			);
 			group.setAttr("aria-pressed", isSelected ? "true" : "false");
 
-			const dot = document.createElementNS(
+			const dot = activeDocument.createElementNS(
 				"http://www.w3.org/2000/svg",
 				"circle",
 			);
@@ -336,7 +336,7 @@ export function renderTrendChart(
 			);
 			dot.setAttr("pointer-events", "none");
 
-			const hit = document.createElementNS(
+			const hit = activeDocument.createElementNS(
 				"http://www.w3.org/2000/svg",
 				"circle",
 			);
