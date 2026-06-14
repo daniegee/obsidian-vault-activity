@@ -31,12 +31,27 @@ jobs:
 
             const title = context.payload.pull_request.title;
             const prNumber = context.payload.pull_request.number;
+            const validTypes = Object.keys(typeMap).join(', ');
 
             const match = title.match(/^(\w+)(\(.+\))?!?:/);
-            if (!match) return;
+            if (!match) {
+              core.setFailed(
+                `PR title "${title}" does not follow conventional commit format.\n` +
+                `Expected: <type>(<scope>): <description>\n` +
+                `Example:  feat(parser): add support for markdown tables\n` +
+                `Valid types: ${validTypes}`
+              );
+              return;
+            }
 
             const label = typeMap[match[1].toLowerCase()];
-            if (!label) return;
+            if (!label) {
+              core.setFailed(
+                `Unknown commit type "${match[1]}" in PR title "${title}".\n` +
+                `Valid types: ${validTypes}`
+              );
+              return;
+            }
 
             // Create the label if it doesn't exist yet
             try {

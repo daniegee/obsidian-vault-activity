@@ -1,13 +1,10 @@
 name: Release
 
 on:
-    push:
-        branches: ["master"]
+    workflow_dispatch:
 
 permissions:
     contents: write
-    issues: write
-    pull-requests: write
 
 jobs:
     release:
@@ -32,3 +29,34 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: npx semantic-release
 
+            - name: Publish draft release
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  NEW_VERSION=$(node -p "require('./package.json').version")
+
+                  # If a GitHub release already exists for this version, semantic-release
+                  # didn't create a new one this run (no releasable commits).
+                  if gh release view "$NEW_VERSION" >/dev/null 2>&1; then
+                    echo "Release $NEW_VERSION already exists, nothing to do."
+                    exit 0
+                  fi
+
+                  # Find the release-drafter draft (there should be exactly one).
+                  DRAFT_TAG=$(gh release list --json isDraft,tagName \
+                    --jq '.[] | select(.isDraft) | .tagName' | head -1)
+
+                  if [ -n "$DRAFT_TAG" ]; then
+                    echo "Publishing draft '$DRAFT_TAG' as '$NEW_VERSION'"
+                    gh release edit "$DRAFT_TAG" \
+                      --tag "$NEW_VERSION" \
+                      --title "$NEW_VERSION" \
+                      --draft=false
+                  else
+                    echo "No draft found, creating release with auto-generated notes"
+                    gh release create "$NEW_VERSION" \
+                      --title "$NEW_VERSION" \
+                      --generate-notes
+                  fi
+
+                  gh release upload "$NEW_VERSION" main.js manifest.json styles.css --clobber
