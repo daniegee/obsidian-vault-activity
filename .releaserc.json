@@ -13,7 +13,23 @@
 				]
 			}
 		],
-		"@semantic-release/release-notes-generator",
+		[
+			"@semantic-release/release-notes-generator",
+			{
+				"preset": "conventionalcommits",
+				"presetConfig": {
+					"types": [
+						{ "type": "feat", "section": "✨ Features" },
+						{ "type": "fix", "section": "🐛 Bug Fixes" },
+						{ "type": "perf", "section": "⚡ Performance Improvements" },
+						{ "type": "revert", "section": "⏪ Reverts" },
+						{ "type": "chore", "section": "🔧 Maintenance" },
+						{ "type": "refactor", "section": "♻️ Refactoring" },
+						{ "type": "style", "section": "🎨 Styles" }
+					]
+				}
+			}
+		],
 		"@semantic-release/changelog",
 		["@semantic-release/npm", { "npmPublish": false }],
 		[
@@ -26,7 +42,6 @@
 		[
 			"@semantic-release/github",
 			{
-        "generateReleaseNotes": true,
 				"assets": [
 					{ "path": "main.js", "label": "main.js" },
 					{ "path": "manifest.json", "label": "manifest.json" },
