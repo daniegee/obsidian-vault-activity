@@ -122,7 +122,7 @@ export function renderTrendChart(
 ): void {
 	const {
 		data,
-		window,
+		window: timeWindow,
 		metric,
 		onWindowChange,
 		onMetricChange,
@@ -156,7 +156,7 @@ export function renderTrendChart(
 				? "All time"
 				: option.charAt(0).toUpperCase() + option.slice(1);
 		const button = controls.createEl("button", {
-			cls: `vault-activity-chip ${window === option ? "is-active" : ""}`,
+			cls: `vault-activity-chip ${timeWindow === option ? "is-active" : ""}`,
 			text: label,
 			attr: { type: "button" },
 		});
@@ -207,13 +207,13 @@ export function renderTrendChart(
 				);
 			});
 
-			globalThis.setTimeout(() => onMetricChange(option.id), 170);
+			window.setTimeout(() => onMetricChange(option.id), 170);
 		};
 	});
 
 	const mergedSeries = mergeSeries(
-		pointsForWindow(data, window, "new-notes"),
-		pointsForWindow(data, window, "modified-notes"),
+		pointsForWindow(data, timeWindow, "new-notes"),
+		pointsForWindow(data, timeWindow, "modified-notes"),
 	);
 
 	const newValues = mergedSeries.map((point) => point.newCount);
@@ -285,7 +285,7 @@ export function renderTrendChart(
 	const dots = activeDocument.createElementNS("http://www.w3.org/2000/svg", "g");
 	chartGroup.appendChild(dots);
 
-	const isAggregated = window === "yearly" || window === "all-time";
+	const isAggregated = timeWindow === "yearly" || timeWindow === "all-time";
 
 	const renderDots = (seriesMetric: TrendMetric, values: number[]) => {
 		const isActiveSeries = metric === seriesMetric;
@@ -378,15 +378,15 @@ export function renderTrendChart(
 	const total = activeValues.reduce((sum, value) => sum + value, 0);
 	const average = activeValues.length > 0 ? total / activeValues.length : 0;
 	const peakLabel =
-		window === "all-time"
+		timeWindow === "all-time"
 			? "Best month"
-			: window === "yearly"
+			: timeWindow === "yearly"
 				? "Best week"
 				: "Best day";
 	const avgLabel =
-		window === "all-time"
+		timeWindow === "all-time"
 			? "Avg/month"
-			: window === "yearly"
+			: timeWindow === "yearly"
 				? "Average/week"
 				: "Average/day";
 
