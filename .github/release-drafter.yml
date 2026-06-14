@@ -1,57 +1,57 @@
-name-template: '$RESOLVED_VERSION'
-tag-template: '$RESOLVED_VERSION'
+name-template: "$RESOLVED_VERSION"
+tag-template: "$RESOLVED_VERSION"
 template: |
-  $CHANGES
+    $CHANGES
 
 categories:
-  - title: '✨ New Features'
-    labels:
-      - feature
-      - enhancement
-  - title: '🐛 Bug Fixes'
-    labels:
-      - fix
-      - bug
-  - title: '⚡ Performance Improvements'
-    labels:
-      - performance
-  - title: '🔧 Maintenance'
-    labels:
-      - chore
-      - refactor
-      - style
-      - test
-      - build
-      - CI/CD
-      - dependencies
-  - title: '📝 Documentation'
-    labels:
-      - documentation
-  - title: '📦 Other Changes'
-    labels:
-      - '*'
+    - title: "✨ New Features"
+      labels:
+          - feature
+          - enhancement
+    - title: "🐛 Bug Fixes"
+      labels:
+          - fix
+          - bug
+    - title: "⚡ Performance Improvements"
+      labels:
+          - performance
+    - title: "🔧 Maintenance"
+      labels:
+          - chore
+          - refactor
+          - style
+          - test
+          - build
+          - CI/CD
+          - dependencies
+    - title: "📝 Documentation"
+      labels:
+          - documentation
+    - title: "📦 Other Changes"
+      labels:
+          - "*"
 
 version-resolver:
-  major:
-    labels:
-      - major
-  minor:
-    labels:
-      - minor
-      - feature
-      - enhancement
-  patch:
-    labels:
-      - patch
-      - bug
-      - fix
-      - performance
-      - chore
-      - dependencies
-      - refactor
-      - style
-      - test
-      - build
-      - CI/CD
-      - documentation
-  default: patch
+    major:
+        labels:
+            - major
+    minor:
+        labels:
+            - minor
+            - feature
+            - enhancement
+    patch:
+        labels:
+            - patch
+            - bug
+            - fix
+            - performance
+            - chore
+            - dependencies
+            - refactor
+            - style
+            - test
+            - build
+            - CI/CD
+            - documentation
+    default: patch

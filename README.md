@@ -58,15 +58,15 @@ The primary goal is to make note capture and maintenance visible. Vault Activity
 
 ### Obsidian settings
 
-| Setting                   | What it does                                                  | Default            |
-| ------------------------- | ------------------------------------------------------------- | ------------------ |
+| Setting                   | What it does                                                   | Default            |
+| ------------------------- | -------------------------------------------------------------- | ------------------ |
 | Dashboard include folders | Optional allow-list scope for dashboard widgets and note lists | Empty              |
-| Dashboard exclude folders | Exclude scope used when include list setting is empty        | `Templates`        |
-| Streak calculation mode   | Choose what marks a day active                               | `new-and-modified` |
-| Created date property     | Frontmatter (property) key for new-note timestamps                      | `Date`             |
-| Modified date property    | Frontmatter (property) key for modified-note timestamps                 | `Last modified`    |
-| Auto-refresh              | Recompute on create, modify, delete, and rename events       | `true`             |
-| Refresh debounce (ms)     | Delay before recomputing after events                        | `400`              |
+| Dashboard exclude folders | Exclude scope used when include list setting is empty          | `Templates`        |
+| Streak calculation mode   | Choose what marks a day active                                 | `new-and-modified` |
+| Created date property     | Frontmatter (property) key for new-note timestamps             | `Date`             |
+| Modified date property    | Frontmatter (property) key for modified-note timestamps        | `Last modified`    |
+| Auto-refresh              | Recompute on create, modify, delete, and rename events         | `true`             |
+| Refresh debounce (ms)     | Delay before recomputing after events                          | `400`              |
 
 ## Important behavior notes
 
@@ -104,7 +104,7 @@ npm run format         # prettier
 ![Vitest](https://img.shields.io/badge/Vitest-%23FF4785.svg?style=for-the-badge&logo=vitest&logoColor=white)
 ![Prettier](https://img.shields.io/badge/Prettier-%23F7B93E.svg?style=for-the-badge&logo=prettier&logoColor=white)
 
-### 
+###
 
 ## Roadmapped improvements
 

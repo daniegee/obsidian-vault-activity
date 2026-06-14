@@ -234,7 +234,10 @@ export function renderTrendChart(
 	const CHART_W = 600 - PAD_X * 2;
 	const CHART_H = 160 - PAD_Y * 2;
 
-	const svg = activeDocument.createElementNS("http://www.w3.org/2000/svg", "svg");
+	const svg = activeDocument.createElementNS(
+		"http://www.w3.org/2000/svg",
+		"svg",
+	);
 	svg.setAttribute("viewBox", "0 0 600 180");
 	svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
 	svg.addClass("vault-activity-trend-chart");
@@ -282,7 +285,10 @@ export function renderTrendChart(
 	);
 	chartGroup.appendChild(modifiedPolyline);
 
-	const dots = activeDocument.createElementNS("http://www.w3.org/2000/svg", "g");
+	const dots = activeDocument.createElementNS(
+		"http://www.w3.org/2000/svg",
+		"g",
+	);
 	chartGroup.appendChild(dots);
 
 	const isAggregated = timeWindow === "yearly" || timeWindow === "all-time";
