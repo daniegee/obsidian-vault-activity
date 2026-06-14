@@ -46,8 +46,8 @@ describe("vault indexer workflow smoke", () => {
 		const result = await indexer.fullScan();
 
 		expect(result.notes).toHaveLength(2);
-		expect(result.notes[0].effectiveMtime).toBeGreaterThanOrEqual(
-			result.notes[1].effectiveMtime,
+		expect(result.notes[0]!.effectiveMtime).toBeGreaterThanOrEqual(
+			result.notes[1]!.effectiveMtime,
 		);
 		expect(result.folders).toEqual(["Daily", "Projects"]);
 		expect(
