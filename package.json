@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-vault-activity",
-	"version": "1.0.7",
+	"version": "1.0.8",
 	"description": "Obsidian plugin to track your note activity stats with streak highlights and visual trend windows",
 	"main": "main.js",
 	"type": "module",
