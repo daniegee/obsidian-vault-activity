@@ -100,7 +100,7 @@ export function buildGlobalDailyAggregates(
 		.slice()
 		.sort((left, right) => left.effectiveMtime - right.effectiveMtime);
 	const startDate = toDateKey(sorted[0]!.effectiveMtime);
-	const last = sorted.at(-1);
+	const last = sorted[sorted.length - 1];
 	if (!last) {
 		return [];
 	}
