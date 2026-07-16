@@ -85,3 +85,16 @@ jobs:
                           labels: [label.name],
                         });
                       }
+                      
+            # A review can't be requested from the PR author, so skip self-authored PRs
+            - name: Request review from daniegee
+              if: always() && github.event.action == 'opened' && github.event.pull_request.user.login != 'daniegee'
+              uses: actions/github-script@v9
+              with:
+                  script: |
+                      await github.rest.pulls.requestReviewers({
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        pull_number: context.payload.pull_request.number,
+                        reviewers: ['daniegee'],
+                      });
