@@ -27,7 +27,7 @@
 		"@vitest/coverage-v8": "^4.1.10",
 		"conventional-changelog-conventionalcommits": "^10.2.1",
 		"esbuild": "0.28.1",
-		"eslint-plugin-obsidianmd": "0.3.0",
+		"eslint-plugin-obsidianmd": "0.4.1",
 		"globals": "17.6.0",
 		"jiti": "2.7.0",
 		"prettier": "^3.8.1",
