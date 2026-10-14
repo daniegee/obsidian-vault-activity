@@ -158,6 +158,7 @@ Follow Obsidian's **Developer Policies** and **Plugin Guidelines**. In particula
 - Introduce network calls without an obvious user-facing reason and documentation.
 - Ship features that require cloud services without clear disclosure and explicit opt-in.
 - Store or transmit vault contents unless essential and consented.
+- Include a Claude session link (e.g. `https://claude.ai/code/session_…`) in pull request descriptions.
 
 ## Common tasks
 
