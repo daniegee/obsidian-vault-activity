@@ -142,23 +142,32 @@ export class MockElement {
 }
 
 export function installMockDocument(): () => void {
-	const original = globalThis.document;
+	// Obsidian code uses `activeDocument`; keep `document` in sync for parity.
+	const keys = ["document", "activeDocument"] as const;
+	const originals = keys.map((key) =>
+		Object.getOwnPropertyDescriptor(globalThis, key),
+	);
 	const mockDocument = {
 		createElementNS: (_namespace: string, tagName: string) =>
 			new MockElement(tagName),
 	} as unknown as Document;
 
-	Object.defineProperty(globalThis, "document", {
-		value: mockDocument,
-		configurable: true,
-		writable: true,
-	});
-
-	return () => {
-		Object.defineProperty(globalThis, "document", {
-			value: original,
+	for (const key of keys) {
+		Object.defineProperty(globalThis, key, {
+			value: mockDocument,
 			configurable: true,
 			writable: true,
+		});
+	}
+
+	return () => {
+		keys.forEach((key, index) => {
+			const original = originals[index];
+			if (original) {
+				Object.defineProperty(globalThis, key, original);
+			} else {
+				Reflect.deleteProperty(globalThis, key);
+			}
 		});
 	};
 }
