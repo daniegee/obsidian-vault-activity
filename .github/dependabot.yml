@@ -9,3 +9,7 @@ updates:
       directory: "/" # Location of package manifests
       schedule:
           interval: "weekly"
+      ignore:
+          # TypeScript majors need a coordinated typescript-eslint upgrade, tracked in #65
+          - dependency-name: "typescript"
+            update-types: ["version-update:semver-major"]
