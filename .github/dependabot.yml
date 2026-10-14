@@ -13,3 +13,6 @@ updates:
           # TypeScript majors need a coordinated typescript-eslint upgrade, tracked in #65
           - dependency-name: "typescript"
             update-types: ["version-update:semver-major"]
+          # @types/node must not be newer than the Node major in .nvmrc; bump both together
+          - dependency-name: "@types/node"
+            update-types: ["version-update:semver-major"]
