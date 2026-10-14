@@ -3,10 +3,16 @@ name: Node.js build
 on:
     pull_request:
 
-jobs:
-    build:
-        runs-on: ubuntu-latest
+# A new push to the same PR cancels the run it supersedes.
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
 
+# lint, build and test run as parallel jobs; each installs from the npm cache.
+jobs:
+    lint:
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
         steps:
             - uses: actions/checkout@v4
             - name: Use Node.js
@@ -14,6 +20,31 @@ jobs:
               with:
                   node-version-file: ".nvmrc"
                   cache: "npm"
-            - run: npm ci
+            - run: npm ci --no-audit --no-fund
             - run: npm run lint
+
+    build:
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
+        steps:
+            - uses: actions/checkout@v4
+            - name: Use Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version-file: ".nvmrc"
+                  cache: "npm"
+            - run: npm ci --no-audit --no-fund
             - run: npm run build
+
+    test:
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
+        steps:
+            - uses: actions/checkout@v4
+            - name: Use Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version-file: ".nvmrc"
+                  cache: "npm"
+            - run: npm ci --no-audit --no-fund
+            - run: npm test
