@@ -4,6 +4,11 @@ type ElementOptions = {
 	attr?: Record<string, string>;
 };
 
+type SvgOptions = {
+	cls?: string | string[];
+	attr?: Record<string, string | number | boolean | null>;
+};
+
 export class MockElement {
 	tagName: string;
 	classes: string[] = [];
@@ -82,6 +87,29 @@ export class MockElement {
 
 	createEl(tagName: string, options: ElementOptions = {}): MockElement {
 		return this.createChild(tagName, options);
+	}
+
+	createSvg(tagName: string, options: SvgOptions | string = {}): MockElement {
+		const { cls, attr = {} } =
+			typeof options === "string" ? { cls: options } : options;
+		// Obsidian's runtime createSvg passes a string cls straight to
+		// classList.add(), which throws on whitespace; only arrays may hold
+		// multiple classes.
+		if (typeof cls === "string" && /\s/.test(cls)) {
+			throw new Error(
+				`InvalidCharacterError: createSvg cls "${cls}" contains whitespace; pass an array`,
+			);
+		}
+		const attrs: Record<string, string> = {};
+		for (const [key, value] of Object.entries(attr)) {
+			if (value !== null && value !== false) {
+				attrs[key] = String(value);
+			}
+		}
+		return this.createChild(tagName, {
+			cls: Array.isArray(cls) ? cls.join(" ") : cls,
+			attr: attrs,
+		});
 	}
 
 	appendChild(child: MockElement): MockElement {

@@ -234,62 +234,48 @@ export function renderTrendChart(
 	const CHART_W = 600 - PAD_X * 2;
 	const CHART_H = 160 - PAD_Y * 2;
 
-	const svg = activeDocument.createElementNS(
-		"http://www.w3.org/2000/svg",
-		"svg",
-	);
-	svg.setAttribute("viewBox", "0 0 600 180");
-	svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
-	svg.addClass("vault-activity-trend-chart");
-	container.appendChild(svg);
+	const svg = container.createSvg("svg", {
+		cls: "vault-activity-trend-chart",
+		attr: {
+			viewBox: "0 0 600 180",
+			preserveAspectRatio: "xMidYMid meet",
+		},
+	});
 
 	// Inset group keeps all content away from the SVG boundary so edge nodes aren't clipped.
-	const chartGroup = activeDocument.createElementNS(
-		"http://www.w3.org/2000/svg",
-		"g",
-	);
-	chartGroup.setAttr("transform", `translate(${PAD_X}, ${PAD_Y})`);
-	svg.appendChild(chartGroup);
+	const chartGroup = svg.createSvg("g", {
+		attr: { transform: `translate(${PAD_X}, ${PAD_Y})` },
+	});
 
 	const max = Math.max(...newValues, ...modifiedValues, 1);
 
-	const newPolyline = activeDocument.createElementNS(
-		"http://www.w3.org/2000/svg",
-		"polyline",
-	);
-	newPolyline.setAttr("fill", "none");
-	newPolyline.setAttr("stroke-width", "4");
-	newPolyline.setAttr(
-		"points",
-		buildPolyline(newValues, CHART_W, CHART_H, max),
-	);
-	newPolyline.setAttr(
-		"class",
-		`vault-activity-trend-line vault-activity-trend-line--new ${metric === "new-notes" ? "is-active" : "is-inactive"}`,
-	);
-	chartGroup.appendChild(newPolyline);
+	chartGroup.createSvg("polyline", {
+		cls: [
+			"vault-activity-trend-line",
+			"vault-activity-trend-line--new",
+			metric === "new-notes" ? "is-active" : "is-inactive",
+		],
+		attr: {
+			fill: "none",
+			"stroke-width": "4",
+			points: buildPolyline(newValues, CHART_W, CHART_H, max),
+		},
+	});
 
-	const modifiedPolyline = activeDocument.createElementNS(
-		"http://www.w3.org/2000/svg",
-		"polyline",
-	);
-	modifiedPolyline.setAttr("fill", "none");
-	modifiedPolyline.setAttr("stroke-width", "4");
-	modifiedPolyline.setAttr(
-		"points",
-		buildPolyline(modifiedValues, CHART_W, CHART_H, max),
-	);
-	modifiedPolyline.setAttr(
-		"class",
-		`vault-activity-trend-line vault-activity-trend-line--modified ${metric === "modified-notes" ? "is-active" : "is-inactive"}`,
-	);
-	chartGroup.appendChild(modifiedPolyline);
+	chartGroup.createSvg("polyline", {
+		cls: [
+			"vault-activity-trend-line",
+			"vault-activity-trend-line--modified",
+			metric === "modified-notes" ? "is-active" : "is-inactive",
+		],
+		attr: {
+			fill: "none",
+			"stroke-width": "4",
+			points: buildPolyline(modifiedValues, CHART_W, CHART_H, max),
+		},
+	});
 
-	const dots = activeDocument.createElementNS(
-		"http://www.w3.org/2000/svg",
-		"g",
-	);
-	chartGroup.appendChild(dots);
+	const dots = chartGroup.createSvg("g");
 
 	const isAggregated = timeWindow === "yearly" || timeWindow === "all-time";
 
@@ -313,49 +299,42 @@ export function renderTrendChart(
 				seriesMetric === "new-notes" ? "new notes" : "modified notes";
 			const seriesLabel = `${point.label}: ${value} ${countLabel}`;
 
-			const group = activeDocument.createElementNS(
-				"http://www.w3.org/2000/svg",
-				"g",
-			);
-			group.setAttr(
-				"class",
-				`vault-activity-trend-group vault-activity-trend-group--${seriesMetric === "new-notes" ? "new" : "modified"} is-active`,
-			);
-			group.setAttr("role", "button");
-			group.setAttr("tabindex", "0");
-			group.setAttr(
-				"aria-label",
-				`${seriesLabel}. Click to open ${isAggregated ? "range" : "day"} drill-down details.`,
-			);
-			group.setAttr("aria-pressed", isSelected ? "true" : "false");
+			const group = dots.createSvg("g", {
+				cls: [
+					"vault-activity-trend-group",
+					`vault-activity-trend-group--${seriesMetric === "new-notes" ? "new" : "modified"}`,
+					"is-active",
+				],
+				attr: {
+					role: "button",
+					tabindex: "0",
+					"aria-label": `${seriesLabel}. Click to open ${isAggregated ? "range" : "day"} drill-down details.`,
+					"aria-pressed": isSelected ? "true" : "false",
+				},
+			});
 
-			const dot = activeDocument.createElementNS(
-				"http://www.w3.org/2000/svg",
-				"circle",
-			);
-			dot.setAttr("cx", `${x}`);
-			dot.setAttr("cy", `${y}`);
-			dot.setAttr("r", isSelected ? "6" : "4");
-			dot.setAttr(
-				"class",
-				`vault-activity-trend-dot${isSelected ? " is-selected" : ""}`,
-			);
-			dot.setAttr("pointer-events", "none");
+			const dot = group.createSvg("circle", {
+				cls: isSelected
+					? ["vault-activity-trend-dot", "is-selected"]
+					: "vault-activity-trend-dot",
+				attr: {
+					cx: `${x}`,
+					cy: `${y}`,
+					r: isSelected ? "6" : "4",
+					"pointer-events": "none",
+				},
+			});
 
-			const hit = activeDocument.createElementNS(
-				"http://www.w3.org/2000/svg",
-				"circle",
-			);
-			hit.setAttr("cx", `${x}`);
-			hit.setAttr("cy", `${y}`);
-			hit.setAttr("r", "14");
-			hit.setAttr("fill", "transparent");
-			hit.setAttr("class", "vault-activity-trend-hit");
-			hit.setAttr("title", seriesLabel);
-
-			group.appendChild(dot);
-			group.appendChild(hit);
-			dots.appendChild(group);
+			group.createSvg("circle", {
+				cls: "vault-activity-trend-hit",
+				attr: {
+					cx: `${x}`,
+					cy: `${y}`,
+					r: "14",
+					fill: "transparent",
+					title: seriesLabel,
+				},
+			});
 
 			group.addEventListener("mouseenter", () =>
 				dot.setAttr("r", isSelected ? "7" : "6"),
