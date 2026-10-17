@@ -250,7 +250,11 @@ export function renderTrendChart(
 	const max = Math.max(...newValues, ...modifiedValues, 1);
 
 	chartGroup.createSvg("polyline", {
-		cls: `vault-activity-trend-line vault-activity-trend-line--new ${metric === "new-notes" ? "is-active" : "is-inactive"}`,
+		cls: [
+			"vault-activity-trend-line",
+			"vault-activity-trend-line--new",
+			metric === "new-notes" ? "is-active" : "is-inactive",
+		],
 		attr: {
 			fill: "none",
 			"stroke-width": "4",
@@ -259,7 +263,11 @@ export function renderTrendChart(
 	});
 
 	chartGroup.createSvg("polyline", {
-		cls: `vault-activity-trend-line vault-activity-trend-line--modified ${metric === "modified-notes" ? "is-active" : "is-inactive"}`,
+		cls: [
+			"vault-activity-trend-line",
+			"vault-activity-trend-line--modified",
+			metric === "modified-notes" ? "is-active" : "is-inactive",
+		],
 		attr: {
 			fill: "none",
 			"stroke-width": "4",
@@ -292,7 +300,11 @@ export function renderTrendChart(
 			const seriesLabel = `${point.label}: ${value} ${countLabel}`;
 
 			const group = dots.createSvg("g", {
-				cls: `vault-activity-trend-group vault-activity-trend-group--${seriesMetric === "new-notes" ? "new" : "modified"} is-active`,
+				cls: [
+					"vault-activity-trend-group",
+					`vault-activity-trend-group--${seriesMetric === "new-notes" ? "new" : "modified"}`,
+					"is-active",
+				],
 				attr: {
 					role: "button",
 					tabindex: "0",
@@ -302,7 +314,9 @@ export function renderTrendChart(
 			});
 
 			const dot = group.createSvg("circle", {
-				cls: `vault-activity-trend-dot${isSelected ? " is-selected" : ""}`,
+				cls: isSelected
+					? ["vault-activity-trend-dot", "is-selected"]
+					: "vault-activity-trend-dot",
 				attr: {
 					cx: `${x}`,
 					cy: `${y}`,
