@@ -16,3 +16,6 @@ updates:
           # @types/node must not be newer than the Node major in .nvmrc; bump both together
           - dependency-name: "@types/node"
             update-types: ["version-update:semver-major"]
+          # 10.4.0+ requires conventional-changelog-writer@9; @semantic-release/release-notes-generator@14 still ships writer@8
+          - dependency-name: "conventional-changelog-conventionalcommits"
+            versions: [">=10.4.0"]
