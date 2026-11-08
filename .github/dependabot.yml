@@ -1,17 +1,39 @@
-# To get started with Dependabot version updates, you'll need to specify which
-# package ecosystems to update and where the package manifests are located.
-# Please see the documentation for all configuration options:
-# https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
-
 version: 2
+
+# Groups keep packages that release together, or must move together, in one PR.
+# They are drawn from past Dependabot PRs that arrived as separate pairs for the
+# same release (vitest #101 + @vitest/coverage-v8 #100, #92 + #90, #49 + #45) or
+# for one toolchain (semantic-release #88, #84, #85, #86; typescript-eslint,
+# globals and @eslint/js).
 updates:
-    - package-ecosystem: "npm" # See documentation for possible values
-      directory: "/" # Location of package manifests
+    - package-ecosystem: "npm"
+      directory: "/"
       schedule:
           interval: "weekly"
           day: "friday"
           time: "22:00"
           timezone: "Australia/Sydney"
+      open-pull-requests-limit: 20
+      groups:
+          # @vitest/coverage-v8 is pinned to vitest's exact version.
+          vitest:
+              patterns: ["vitest", "@vitest/*"]
+          semantic-release:
+              patterns:
+                  [
+                      "semantic-release",
+                      "@semantic-release/*",
+                      "conventional-changelog-*",
+                  ]
+          eslint:
+              patterns:
+                  [
+                      "eslint",
+                      "@eslint/*",
+                      "eslint-plugin-*",
+                      "typescript-eslint",
+                      "globals",
+                  ]
       ignore:
           # TypeScript majors need a coordinated typescript-eslint upgrade, tracked in #65
           - dependency-name: "typescript"
