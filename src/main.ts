@@ -1,7 +1,10 @@
 import { Notice, Plugin, WorkspaceLeaf } from "obsidian";
 import {
 	VaultActivityIndexer,
+	applyRenames,
 	filterByTrackedMarkdown,
+	readSnapshots,
+	removeSnapshots,
 } from "./indexer/vaultIndexer";
 import { DEFAULT_SETTINGS, VaultActivitySettingTab } from "./settings";
 import type {
@@ -22,6 +25,12 @@ export default class VaultActivityPlugin extends Plugin {
 	private readonly views = new Set<VaultActivityDashboardView>();
 	private refreshTimer: number | null = null;
 	private refreshInFlight: Promise<void> | null = null;
+	private rescanRequested = false;
+	// Applied at the start of the next scan so a scan in flight can't overwrite a move.
+	private pendingRenames: Array<[from: string, to: string]> = [];
+	// Deletes seen mid-scan; the scan may already have read those files.
+	private deletedDuringScan: string[] = [];
+	private indexedProperties: string | undefined;
 
 	async onload(): Promise<void> {
 		await this.loadPluginData();
@@ -65,9 +74,10 @@ export default class VaultActivityPlugin extends Plugin {
 			),
 		);
 		this.registerEvent(
-			this.app.vault.on("rename", (file) =>
-				this.handleVaultChange("rename", file),
-			),
+			this.app.vault.on("rename", (file, oldPath) => {
+				this.pendingRenames.push([oldPath, file.path]);
+				this.scheduleRefresh("rename");
+			}),
 		);
 
 		await this.refreshIndex("startup", true);
@@ -114,18 +124,31 @@ export default class VaultActivityPlugin extends Plugin {
 
 	async refreshIndex(reason: string, silent = false): Promise<void> {
 		if (this.refreshInFlight != null) {
+			// The running scan may have read files before this change landed.
+			this.rescanRequested = true;
 			await this.refreshInFlight;
 			return;
 		}
 
 		this.refreshInFlight = (async () => {
-			const indexer = new VaultActivityIndexer(
-				this.app.vault,
-				this.settings,
-				this.snapshots,
-			);
-			const nextIndex = await indexer.fullScan();
-			this.snapshots = nextIndex.snapshots;
+			let nextIndex: IndexerResult;
+			do {
+				this.rescanRequested = false;
+				applyRenames(this.snapshots, this.pendingRenames.splice(0));
+				const properties = `${this.settings.createdDateProperty}|${this.settings.modifiedDateProperty}`;
+				const indexer = new VaultActivityIndexer(
+					this.app.vault,
+					this.settings,
+					this.snapshots,
+					properties === this.indexedProperties,
+				);
+				nextIndex = await indexer.fullScan();
+				for (const path of this.deletedDuringScan.splice(0)) {
+					removeSnapshots(nextIndex.snapshots, path);
+				}
+				this.snapshots = nextIndex.snapshots;
+				this.indexedProperties = properties;
+			} while (this.rescanRequested);
 			this.latestIndex = nextIndex;
 			await this.savePluginData();
 			this.views.forEach((view) => view.setIndexResult(nextIndex));
@@ -170,19 +193,26 @@ export default class VaultActivityPlugin extends Plugin {
 			...DEFAULT_SETTINGS,
 			...(rawData?.settings ?? undefined),
 		};
-		this.snapshots = rawData?.snapshots ?? {};
+		this.snapshots = readSnapshots(rawData?.snapshots);
+		this.indexedProperties = rawData?.indexedProperties;
 	}
 
 	private async savePluginData(): Promise<void> {
 		await this.saveData({
 			settings: this.settings,
 			snapshots: this.snapshots,
+			indexedProperties: this.indexedProperties,
 		} satisfies VaultActivityPluginData);
 	}
 
 	private handleVaultChange(reason: string, file: unknown): void {
-		if (reason === "delete" && filterByTrackedMarkdown(file)) {
-			delete this.snapshots[file.path];
+		const path = (file as { path?: unknown } | null)?.path;
+		if (reason === "delete" && typeof path === "string") {
+			// Covers folders too; the immediate refresh persists the removal to data.json.
+			removeSnapshots(this.snapshots, path);
+			if (this.refreshInFlight != null) {
+				this.deletedDuringScan.push(path);
+			}
 			this.scheduleRefresh(reason, true);
 			return;
 		}

@@ -2,10 +2,11 @@
 Feature: Activity trends
 
   @Test-301
-  Scenario: Modified activity projection follows timestamp priority
-    Given a note has multiple possible modified timestamps
-    When modified trend data is built
-    Then timestamp priority is modified property, then content edit, then property edit
+  Scenario: Edits are dated by the modified property, then file modified time
+    Given a note already has a baseline snapshot
+    When its body changes
+    Then the edit is dated by the modified property if it was bumped with the edit
+    And by the file modified time otherwise
 
   @Test-302
   Scenario: Trend metric switches active dataset

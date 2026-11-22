@@ -1,33 +1,28 @@
 export type TimeWindow = "weekly" | "monthly" | "yearly" | "all-time";
 export type TrendMetric = "new-notes" | "modified-notes";
-export type ActivitySignal = "note-created" | "linking-edit" | "body-edit";
+export type ActivitySignal = "note-created" | "body-edit";
 export type StreakCalculationMode =
-	| "new-only"
-	| "modified-only"
-	| "new-and-modified";
+	"new-only" | "modified-only" | "new-and-modified";
 
+/** One note's stored state in data.json, keyed by path. Path, folder and title come from the key. */
 export interface NoteSnapshot {
-	path: string;
-	folder: string;
-	title: string;
 	createdMtime: number;
+	/** Matches notes renamed while Obsidian was closed. */
 	contentHash: string;
+	/** Changes on body or link edits only, so property-only changes are ignored. */
 	bodyHash: string;
-	linkHash: string;
-	propertyHash?: string;
-	tags: string[];
-	lastMeaningfulMtime: number | null;
+	/** Previous modified-property value, to tell when the user bumped it. */
 	lastModifiedPropertyMtime?: number | null;
-	lastContentEditMtime?: number | null;
-	lastPropertyEditMtime?: number | null;
-	lastMeaningfulSignal: ActivitySignal | null;
+	/** Timestamps of detected edits, at most one per local day, ascending. */
+	editHistory: number[];
+	/** File mtime when last read; an unchanged mtime lets scans skip the read. */
+	fileMtime?: number;
+	/** File size when last read; checked with fileMtime before skipping a read. */
+	fileSize?: number;
 }
 
 export interface ParsedNoteContent {
 	body: string;
-	links: string[];
-	tags: string[];
-	propertyHash: string;
 	createdDateMs: number | null;
 	lastModifiedDateMs: number | null;
 }
@@ -41,12 +36,10 @@ export interface ActivityRecord {
 	path: string;
 	title: string;
 	folder: string;
-	tags: string[];
 	effectiveMtime: number;
-	lastModifiedPropertyMtime?: number | null;
-	lastContentEditMtime?: number | null;
-	lastPropertyEditMtime?: number | null;
 	signal: ActivitySignal;
+	createdMtime: number;
+	editHistory: number[];
 }
 
 export interface FilterState {
@@ -123,4 +116,6 @@ export interface VaultActivityPluginSettings {
 export interface VaultActivityPluginData {
 	settings: VaultActivityPluginSettings;
 	snapshots: Record<string, NoteSnapshot>;
+	/** Date property names the snapshots were parsed with; a change forces a full re-read. */
+	indexedProperties?: string;
 }

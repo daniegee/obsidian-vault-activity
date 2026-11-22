@@ -4,13 +4,15 @@ import { addDays, endOfMonth, parseDateKey, toDateKey } from "../../utils/date";
 interface DrillDownPanelProps {
 	data: DashboardData;
 	onOpenNote: (path: string) => Promise<void>;
+	/** Tags with their leading `#`. */
+	getTags: (path: string) => string[];
 }
 
 export function renderDrillDownPanel(
 	container: HTMLElement,
 	props: DrillDownPanelProps,
 ): void {
-	const { data, onOpenNote } = props;
+	const { data, onOpenNote, getTags } = props;
 
 	container.empty();
 	container.addClass("vault-activity-panel");
@@ -95,12 +97,13 @@ export function renderDrillDownPanel(
 			await openNote();
 		};
 
-		if (note.tags.length > 0) {
+		const noteTags = getTags(note.path);
+		if (noteTags.length > 0) {
 			const tags = item.createDiv({ cls: "vault-activity-note-tags" });
-			note.tags.forEach((tag) => {
+			noteTags.forEach((tag) => {
 				tags.createSpan({
 					cls: "tag vault-activity-note-tag",
-					text: `#${tag}`,
+					text: tag,
 				});
 			});
 		}

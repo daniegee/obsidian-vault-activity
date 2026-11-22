@@ -8,21 +8,22 @@ function note(
 	day: string,
 	folder: string,
 	signal: ActivityRecord["signal"] = "body-edit",
-	tags: string[] = [],
 ): ActivityRecord {
 	return {
 		path,
 		title: path.split("/").pop()!.replace(/\.md$/, ""),
 		folder,
-		tags,
 		effectiveMtime: new Date(`${day}T12:00:00`).getTime(),
-		lastModifiedPropertyMtime: null,
-		lastContentEditMtime:
-			signal === "note-created"
-				? null
-				: new Date(`${day}T12:00:00`).getTime(),
-		lastPropertyEditMtime: null,
 		signal,
+		// Edited fixtures were created long before any dashboard window.
+		createdMtime:
+			signal === "note-created"
+				? new Date(`${day}T12:00:00`).getTime()
+				: 0,
+		editHistory:
+			signal === "note-created"
+				? []
+				: [new Date(`${day}T12:00:00`).getTime()],
 	};
 }
 
@@ -51,7 +52,7 @@ describe("aggregate metrics", () => {
 	it("uses one scoped dataset for summary, trend, and drill-down", () => {
 		const notes = [
 			note("Projects/New.md", "2026-03-10", "Projects", "note-created"),
-			note("Projects/Link.md", "2026-03-10", "Projects", "linking-edit"),
+			note("Projects/Link.md", "2026-03-10", "Projects"),
 			note("Daily/Skip.md", "2026-03-10", "Daily", "body-edit"),
 		];
 
@@ -156,34 +157,6 @@ describe("aggregate metrics", () => {
 		expect(modifiedNotesData.selectedDayNotes[0]!.signal).toBe("body-edit");
 	});
 
-	it("uses Last modified property as the authoritative modified date", () => {
-		const created = note(
-			"Fleeting Notes/Recent Touch.md",
-			"2026-02-11",
-			"Fleeting Notes",
-			"note-created",
-		);
-		created.lastModifiedPropertyMtime = new Date(
-			"2026-03-14T12:00:00",
-		).getTime();
-		created.lastContentEditMtime = null;
-
-		const data = buildDashboardData(
-			[created],
-			filters({
-				includeFolders: ["Fleeting Notes"],
-				trendMetric: "modified-notes",
-				selectedDay: "2026-03-14",
-			}),
-		);
-
-		expect(
-			data.dailyModifiedNotes.find((day) => day.day === "2026-03-14")
-				?.count,
-		).toBe(1);
-		expect(data.selectedDayNotes).toHaveLength(1);
-	});
-
 	it("does not count lastSeen-only touches as modified notes", () => {
 		const created = note(
 			"Fleeting Notes/OpenedOnly.md",
@@ -191,9 +164,6 @@ describe("aggregate metrics", () => {
 			"Fleeting Notes",
 			"note-created",
 		);
-		created.lastContentEditMtime = null;
-		created.lastPropertyEditMtime = null;
-		created.lastModifiedPropertyMtime = null;
 
 		const tracked = note(
 			"Fleeting Notes/Tracked.md",
@@ -201,9 +171,6 @@ describe("aggregate metrics", () => {
 			"Fleeting Notes",
 			"body-edit",
 		);
-		tracked.lastContentEditMtime = new Date(
-			"2026-03-10T12:00:00",
-		).getTime();
 
 		const data = buildDashboardData(
 			[created, tracked],
@@ -229,7 +196,7 @@ describe("aggregate metrics", () => {
 			"body-edit",
 		);
 		edited.effectiveMtime = new Date("2026-02-11T12:00:00").getTime();
-		edited.lastContentEditMtime = new Date("2026-03-14T12:00:00").getTime();
+		edited.editHistory = [new Date("2026-03-14T12:00:00").getTime()];
 
 		const data = buildDashboardData(
 			[edited],
@@ -255,7 +222,7 @@ describe("aggregate metrics", () => {
 			"body-edit",
 		);
 		edited.effectiveMtime = new Date("2024-01-01T12:00:00").getTime();
-		edited.lastContentEditMtime = new Date("2026-03-14T12:00:00").getTime();
+		edited.editHistory = [new Date("2026-03-14T12:00:00").getTime()];
 
 		const data = buildDashboardData(
 			[edited],
@@ -273,42 +240,13 @@ describe("aggregate metrics", () => {
 		expect(data.selectedDayNotes).toHaveLength(1);
 	});
 
-	it("falls back to significant property edits when Last modified is unavailable", () => {
-		const legacy = note(
-			"Fleeting Notes/Legacy.md",
-			"2026-02-11",
-			"Fleeting Notes",
-			"note-created",
-		);
-		legacy.lastContentEditMtime = null;
-		legacy.lastPropertyEditMtime = new Date(
-			"2026-03-14T12:00:00",
-		).getTime();
-
-		const data = buildDashboardData(
-			[legacy],
-			filters({
-				includeFolders: ["Fleeting Notes"],
-				trendMetric: "modified-notes",
-				selectedDay: "2026-03-14",
-			}),
-		);
-
-		expect(
-			data.dailyModifiedNotes.find((day) => day.day === "2026-03-14")
-				?.count,
-		).toBe(1);
-		expect(data.selectedDayNotes).toHaveLength(1);
-	});
-
 	it("does not use lastSeen drift as a modified-note fallback", () => {
-		const legacy = note(
-			"Fleeting Notes/Legacy.md",
+		const untouched = note(
+			"Fleeting Notes/Untouched.md",
 			"2026-02-11",
 			"Fleeting Notes",
 			"note-created",
 		);
-		legacy.lastContentEditMtime = null;
 
 		const tracked = note(
 			"Fleeting Notes/Tracked.md",
@@ -316,12 +254,9 @@ describe("aggregate metrics", () => {
 			"Fleeting Notes",
 			"body-edit",
 		);
-		tracked.lastContentEditMtime = new Date(
-			"2026-03-10T12:00:00",
-		).getTime();
 
 		const data = buildDashboardData(
-			[legacy, tracked],
+			[untouched, tracked],
 			filters({
 				includeFolders: ["Fleeting Notes"],
 				trendMetric: "modified-notes",
@@ -384,10 +319,7 @@ describe("aggregate metrics", () => {
 			"Fleeting Notes",
 			"note-created",
 		);
-		created.lastModifiedPropertyMtime = new Date(
-			"2026-03-10T12:00:00",
-		).getTime();
-		created.lastContentEditMtime = null;
+		created.editHistory = [new Date("2026-03-10T12:00:00").getTime()];
 
 		const data = buildDashboardData(
 			[created],
@@ -452,25 +384,25 @@ describe("aggregate metrics", () => {
 			"Projects/MondayA.md",
 			"2026-03-02",
 			"Projects",
-			"body-edit",
+			"note-created",
 		);
-		mondayEarlyA.effectiveMtime = new Date("2026-03-02T06:15:00").getTime();
+		mondayEarlyA.createdMtime = new Date("2026-03-02T06:15:00").getTime();
 
 		const mondayEarlyB = note(
 			"Projects/MondayB.md",
 			"2026-03-02",
 			"Projects",
-			"body-edit",
+			"note-created",
 		);
-		mondayEarlyB.effectiveMtime = new Date("2026-03-02T07:45:00").getTime();
+		mondayEarlyB.createdMtime = new Date("2026-03-02T07:45:00").getTime();
 
 		const tuesdayAfternoon = note(
 			"Projects/Tuesday.md",
 			"2026-03-03",
 			"Projects",
-			"body-edit",
+			"note-created",
 		);
-		tuesdayAfternoon.effectiveMtime = new Date(
+		tuesdayAfternoon.createdMtime = new Date(
 			"2026-03-03T13:30:00",
 		).getTime();
 
@@ -478,21 +410,17 @@ describe("aggregate metrics", () => {
 			"Daily/NightA.md",
 			"2026-03-05",
 			"Daily",
-			"body-edit",
+			"note-created",
 		);
-		excludedNightA.effectiveMtime = new Date(
-			"2026-03-05T23:10:00",
-		).getTime();
+		excludedNightA.createdMtime = new Date("2026-03-05T23:10:00").getTime();
 
 		const excludedNightB = note(
 			"Daily/NightB.md",
 			"2026-03-06",
 			"Daily",
-			"body-edit",
+			"note-created",
 		);
-		excludedNightB.effectiveMtime = new Date(
-			"2026-03-06T23:20:00",
-		).getTime();
+		excludedNightB.createdMtime = new Date("2026-03-06T23:20:00").getTime();
 
 		const data = buildDashboardData(
 			[
@@ -507,5 +435,22 @@ describe("aggregate metrics", () => {
 
 		expect(data.summary.mostActiveDayLabel).toBe("Monday");
 		expect(data.summary.activityRhythmLabel).toBe("Early Riser");
+	});
+
+	it("counts every recorded edit, not just the latest, in most active day and rhythm", () => {
+		const at = (iso: string) => new Date(iso).getTime();
+		const edited = note("Projects/A.md", "2026-03-02", "Projects");
+		edited.createdMtime = at("2026-02-04T23:00:00"); // Wednesday night
+		edited.editHistory = [
+			at("2026-02-11T23:00:00"), // Wednesday night
+			at("2026-02-18T23:00:00"), // Wednesday night
+			at("2026-03-02T08:00:00"), // latest: Monday morning
+		];
+		edited.effectiveMtime = at("2026-03-02T08:00:00");
+
+		const data = buildDashboardData([edited], filters());
+
+		expect(data.summary.mostActiveDayLabel).toBe("Wednesday");
+		expect(data.summary.activityRhythmLabel).toBe("Night Owl");
 	});
 });

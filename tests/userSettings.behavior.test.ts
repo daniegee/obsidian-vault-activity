@@ -18,12 +18,10 @@ function note(path: string, day: string, folder: string): ActivityRecord {
 		path,
 		title: path.split("/").pop()!.replace(/\.md$/, ""),
 		folder,
-		tags: [],
 		effectiveMtime: new Date(`${day}T12:00:00`).getTime(),
-		lastModifiedPropertyMtime: null,
-		lastContentEditMtime: new Date(`${day}T12:00:00`).getTime(),
-		lastPropertyEditMtime: null,
 		signal: "body-edit",
+		createdMtime: 0,
+		editHistory: [new Date(`${day}T12:00:00`).getTime()],
 	};
 }
 
@@ -104,7 +102,6 @@ describe("user settings behavior", () => {
 
 	it("[Test-104] uses configured created and modified date properties", () => {
 		const created = evaluateNoteActivity(
-			"Projects/Test.md",
 			"---\ncreated_at: 2024-05-03\n---\nBody",
 			5000,
 			1000,
@@ -123,7 +120,7 @@ describe("user settings behavior", () => {
 			},
 		);
 
-		expect(created.snapshot.lastMeaningfulMtime).toBe(
+		expect(created.snapshot.createdMtime).toBe(
 			new Date(2024, 4, 3).getTime(),
 		);
 		expect(modified.lastModifiedDateMs).toBe(

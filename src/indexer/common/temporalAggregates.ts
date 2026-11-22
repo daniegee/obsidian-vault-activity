@@ -74,19 +74,26 @@ export function groupTrend(
 
 	return Array.from(grouped.entries())
 		.sort((left, right) => left[0].localeCompare(right[0]))
-		.map(([day, notes]) => ({
-			day,
-			label:
-				granularity === "weekly"
-					? `Week of ${formatShortDate(day)}`
-					: formatMonthLabel(parseDateKey(day)),
-			count: notes.length,
-			notes: notes
+		.map(([day, bucketNotes]) => {
+			// Newest edit first, so the first record seen per path is the one kept.
+			const seen = new Set<string>();
+			const notes = bucketNotes
 				.slice()
 				.sort(
 					(left, right) => right.effectiveMtime - left.effectiveMtime,
-				),
-		}));
+				)
+				.filter((note) => !seen.has(note.path) && seen.add(note.path));
+
+			return {
+				day,
+				label:
+					granularity === "weekly"
+						? `Week of ${formatShortDate(day)}`
+						: formatMonthLabel(parseDateKey(day)),
+				count: notes.length,
+				notes,
+			};
+		});
 }
 
 export function buildGlobalDailyAggregates(

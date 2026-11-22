@@ -1,11 +1,5 @@
 import type { FrontmatterDateProperties, ParsedNoteContent } from "../types";
-import {
-	extractFrontmatterDate,
-	extractFrontmatterTags,
-	extractLinks,
-	hashString,
-	normalizeTrackedFrontmatter,
-} from "./common/noteContent";
+import { extractFrontmatterDate } from "./common/noteContent";
 
 const DEFAULT_FRONTMATTER_DATE_PROPERTIES: FrontmatterDateProperties = {
 	createdDateProperty: "Date",
@@ -23,9 +17,6 @@ export function parseNoteContent(
 		const body = normalized.trim();
 		return {
 			body,
-			links: extractLinks(body),
-			tags: [],
-			propertyHash: hashString(""),
 			createdDateMs: null,
 			lastModifiedDateMs: null,
 		};
@@ -37,9 +28,6 @@ export function parseNoteContent(
 		const body = normalized.trim();
 		return {
 			body,
-			links: extractLinks(body),
-			tags: [],
-			propertyHash: hashString(""),
 			createdDateMs: null,
 			lastModifiedDateMs: null,
 		};
@@ -47,13 +35,6 @@ export function parseNoteContent(
 
 	const frontmatter = normalized.slice(4, closingIndex);
 	const body = normalized.slice(closingIndex + 5).trim();
-	const tags = extractFrontmatterTags(frontmatter);
-	const propertyHash = hashString(
-		normalizeTrackedFrontmatter(
-			frontmatter,
-			resolvedProperties.modifiedDateProperty,
-		),
-	);
 	const createdDateMs = extractFrontmatterDate(
 		frontmatter,
 		resolvedProperties.createdDateProperty,
@@ -65,9 +46,6 @@ export function parseNoteContent(
 
 	return {
 		body,
-		links: extractLinks(body),
-		tags,
-		propertyHash,
 		createdDateMs,
 		lastModifiedDateMs,
 	};

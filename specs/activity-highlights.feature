@@ -12,11 +12,10 @@ Feature: Activity highlights
     Given a note already has a snapshot baseline
     When only frontmatter fields change
     Then the update is not classified as a body or link content edit
-    And modified trend data may still use modified-related timestamps from metadata
 
   @Test-203
   Scenario: Last-seen changes do not create modified activity
-    Given a note has no modified, content-edit, or property-edit timestamps
+    Given a note has no recorded edits
     When only last-seen time changes
     Then no modified activity is generated
 
@@ -53,23 +52,22 @@ Feature: Activity highlights
     And last-modified-property time is stored separately
 
   @Test-208
-  Scenario: Link changes are classified as linking edits
+  Scenario: Link changes are recorded as edits
     Given a note already has a baseline snapshot
     When the body is updated with a new wikilink
-    Then the signal is linking-edit
+    Then an edit is recorded at the file modified time
 
   @Test-209
-  Scenario: Non-link body changes are classified as body edits
+  Scenario: Plain body changes are recorded as edits
     Given a note already has a baseline snapshot
     When plain body text changes without link changes
-    Then the signal is body-edit
+    Then an edit is recorded at the file modified time
 
   @Test-210
-  Scenario: Content parsing extracts tags and links
-    Given note content with frontmatter tags and body links
-    When note content is parsed
-    Then extracted tags include list and inline tag syntax
-    And extracted links include markdown links and wikilinks
+  Scenario: Drill-down shows tags from Obsidian's metadata cache
+    Given a listed note with frontmatter tags
+    When the drill-down renders
+    Then the note's tags are read from Obsidian's metadata cache, not stored in plugin data
 
   @Test-211
   Scenario: Last modified is parsed from frontmatter
@@ -95,7 +93,7 @@ Feature: Activity highlights
     Given a note has a baseline snapshot and Last modified metadata
     When only Last modified metadata changes
     Then no activity signal is produced
-    And fallback property-edit time is not set
+    And no edit is recorded in the edit history
 
   @Test-215
   Scenario: Configured created date property sets note-created timing
@@ -115,4 +113,4 @@ Feature: Activity highlights
     And a note has a baseline snapshot with updated_at
     When only updated_at changes
     Then no activity signal is produced
-    And fallback property-edit time is not set
+    And no edit is recorded in the edit history

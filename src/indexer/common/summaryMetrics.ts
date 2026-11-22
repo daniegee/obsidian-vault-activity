@@ -13,7 +13,6 @@ import {
 import { buildGlobalDailyAggregates } from "./temporalAggregates";
 
 export function buildSummaryMetrics(
-	scopedAllTimeNotes: ActivityRecord[],
 	scopedAllTimeNewNotes: ActivityRecord[],
 	scopedAllTimeModifiedNotes: ActivityRecord[],
 	streakCalculationMode: StreakCalculationMode,
@@ -31,8 +30,13 @@ export function buildSummaryMetrics(
 		(max, segment) => Math.max(max, segment.length),
 		0,
 	);
-	const mostActiveDayLabel = resolveMostActiveDay(scopedAllTimeNotes);
-	const activityRhythmLabel = resolveActivityRhythm(scopedAllTimeNotes);
+	// Every creation and recorded edit, so these agree with streaks and trends.
+	const allActivity = [
+		...scopedAllTimeNewNotes,
+		...scopedAllTimeModifiedNotes,
+	];
+	const mostActiveDayLabel = resolveMostActiveDay(allActivity);
+	const activityRhythmLabel = resolveActivityRhythm(allActivity);
 
 	return {
 		mostActiveDayLabel,

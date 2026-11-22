@@ -1,5 +1,5 @@
 import type { ActivityRecord, DashboardData, FilterState } from "../types";
-import { toModifiedRecord } from "./common/activityRecords";
+import { toCreatedRecord, toModifiedRecords } from "./common/activityRecords";
 import { applyFilters } from "./common/folderFilters";
 import { buildSummaryMetrics } from "./common/summaryMetrics";
 import {
@@ -30,19 +30,14 @@ export function buildDashboardData(
 		return day >= startDate && day <= endDate;
 	});
 
-	const scopedHistoryNewNotes = scopedHistoryNotes.filter(
-		(note) => note.signal === "note-created",
+	const scopedAllTimeNewNotes = scopedNotes.map(toCreatedRecord);
+	const scopedAllTimeModifiedNotes = scopedNotes.flatMap(toModifiedRecords);
+	const scopedHistoryNewNotes = scopedAllTimeNewNotes.filter((note) =>
+		isWithinHistoryWindow(note.effectiveMtime),
 	);
-	const scopedHistoryModifiedNotes = scopedNotes
-		.map(toModifiedRecord)
-		.filter((note): note is ActivityRecord => note != null)
-		.filter((note) => isWithinHistoryWindow(note.effectiveMtime));
-	const scopedAllTimeNewNotes = scopedNotes.filter(
-		(note) => note.signal === "note-created",
+	const scopedHistoryModifiedNotes = scopedAllTimeModifiedNotes.filter(
+		(note) => isWithinHistoryWindow(note.effectiveMtime),
 	);
-	const scopedAllTimeModifiedNotes = scopedNotes
-		.map(toModifiedRecord)
-		.filter((note): note is ActivityRecord => note != null);
 
 	const dailyNewNotes = buildDailyAggregates(
 		scopedHistoryNewNotes,
@@ -72,7 +67,6 @@ export function buildDashboardData(
 	);
 
 	const summary = buildSummaryMetrics(
-		scopedNotes,
 		scopedAllTimeNewNotes,
 		scopedAllTimeModifiedNotes,
 		filters.streakCalculationMode,

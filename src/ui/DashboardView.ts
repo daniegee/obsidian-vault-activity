@@ -1,4 +1,4 @@
-import { ItemView, WorkspaceLeaf } from "obsidian";
+import { ItemView, WorkspaceLeaf, parseFrontMatterTags } from "obsidian";
 import type VaultActivityPlugin from "../main";
 import type { FilterState, IndexerResult } from "../types";
 import { buildDashboardData } from "../indexer/aggregates";
@@ -132,6 +132,11 @@ export class VaultActivityDashboardView extends ItemView {
 			onOpenNote: async (path) => {
 				await this.app.workspace.openLinkText(path, "", true);
 			},
+			// Read from Obsidian's cache so tags stay current without storing them.
+			getTags: (path) =>
+				parseFrontMatterTags(
+					this.app.metadataCache.getCache(path)?.frontmatter,
+				) ?? [],
 		});
 	}
 }

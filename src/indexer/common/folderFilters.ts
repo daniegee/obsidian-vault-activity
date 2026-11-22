@@ -11,30 +11,29 @@ export function applyFilters(
 	notes: ActivityRecord[],
 	filters: FilterState,
 ): ActivityRecord[] {
-	const includeFolders = filters.includeFolders;
-	const excludeFolders = filters.excludeFolders;
+	return notes.filter((note) =>
+		isFolderInScope(
+			note.folder,
+			filters.includeFolders,
+			filters.excludeFolders,
+		),
+	);
+}
 
-	return notes.filter((note) => {
-		const matchesInclude =
-			includeFolders.length === 0
-				? true
-				: includeFolders.some((folder) =>
-						matchesFolderFilter(note.folder, folder),
-					);
-
-		if (!matchesInclude) {
-			return false;
-		}
-
-		if (includeFolders.length > 0) {
-			return true;
-		}
-
-		const matchesExclude = excludeFolders.some((folder) =>
-			matchesFolderFilter(note.folder, folder),
+/** Include list wins when set; otherwise everything outside the exclude list. */
+export function isFolderInScope(
+	folder: string,
+	includeFolders: string[],
+	excludeFolders: string[],
+): boolean {
+	if (includeFolders.length > 0) {
+		return includeFolders.some((include) =>
+			matchesFolderFilter(folder, include),
 		);
-		return !matchesExclude;
-	});
+	}
+	return !excludeFolders.some((exclude) =>
+		matchesFolderFilter(folder, exclude),
+	);
 }
 
 function matchesFolderFilter(path: string, folder: string): boolean {

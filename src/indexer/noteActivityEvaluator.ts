@@ -1,113 +1,79 @@
-import type {
-	ActivitySignal,
-	FrontmatterDateProperties,
-	NoteSnapshot,
-} from "../types";
-import {
-	extractTitle,
-	hashString,
-	normalizeFolderPath,
-} from "./common/noteContent";
+import type { FrontmatterDateProperties, NoteSnapshot } from "../types";
+import { hashString } from "./common/noteContent";
 import { parseNoteContent } from "./noteContentParser";
+import { toDateKey } from "../utils/date";
 
 interface NoteActivityEvaluation {
 	snapshot: NoteSnapshot;
 	isMeaningful: boolean;
-	signal: ActivitySignal | null;
 }
 
 export function evaluateNoteActivity(
-	path: string,
 	content: string,
 	mtime: number,
 	createdMtime: number,
 	previous: NoteSnapshot | undefined,
 	properties?: Partial<FrontmatterDateProperties>,
 ): NoteActivityEvaluation {
-	const {
-		body,
-		links,
-		tags,
-		propertyHash,
-		createdDateMs,
-		lastModifiedDateMs,
-	} = parseNoteContent(content, properties);
+	const { body, createdDateMs, lastModifiedDateMs } = parseNoteContent(
+		content,
+		properties,
+	);
 	const contentHash = hashString(content);
+	// Links live in the body, so a link change is a body change too.
 	const bodyHash = hashString(body);
-	const linkHash = hashString(links.join("|"));
-	const folder = normalizeFolderPath(path);
-	const title = extractTitle(path);
-	const resolvedModifiedMtime = lastModifiedDateMs ?? mtime;
 
 	if (!previous) {
-		const signal: ActivitySignal = "note-created";
-		const initialCreatedMtime = createdDateMs ?? createdMtime;
 		return {
 			isMeaningful: true,
-			signal,
 			snapshot: {
-				path,
-				folder,
-				title,
-				createdMtime,
+				createdMtime: createdDateMs ?? createdMtime,
 				contentHash,
 				bodyHash,
-				linkHash,
-				propertyHash,
-				tags,
-				lastMeaningfulMtime: initialCreatedMtime,
 				lastModifiedPropertyMtime: lastModifiedDateMs,
-				lastContentEditMtime: null,
-				lastPropertyEditMtime: null,
-				lastMeaningfulSignal: signal,
+				editHistory: [],
 			},
 		};
 	}
 
-	const bodyChanged = previous.bodyHash !== bodyHash;
-	const linksChanged = previous.linkHash !== linkHash;
-	const propertiesChanged =
-		previous.propertyHash == null
-			? false
-			: previous.propertyHash !== propertyHash;
-	const isMeaningful = bodyChanged || linksChanged;
-	const lastContentEditMtime = isMeaningful
-		? mtime
-		: (previous.lastContentEditMtime ?? null);
-	const lastPropertyEditMtime =
-		propertiesChanged && lastModifiedDateMs == null
-			? mtime
-			: (previous.lastPropertyEditMtime ?? null);
-	const signal: ActivitySignal | null = linksChanged
-		? "linking-edit"
-		: bodyChanged
-			? "body-edit"
+	const isMeaningful = previous.bodyHash !== bodyHash;
+	// Only body or link edits count. A modified property bumped alongside them is the
+	// user's own edit date, which survives sync rewriting mtime.
+	const modifiedPropertyBumpedTo =
+		lastModifiedDateMs != null &&
+		lastModifiedDateMs !== (previous.lastModifiedPropertyMtime ?? null)
+			? lastModifiedDateMs
 			: null;
-	const lastMeaningfulMtime = isMeaningful
-		? resolvedModifiedMtime
-		: previous.lastMeaningfulMtime;
-	const lastMeaningfulSignal = isMeaningful
-		? signal
-		: previous.lastMeaningfulSignal;
+	const editHistory = isMeaningful
+		? recordEdit(
+				previous.editHistory,
+				// On the same day mtime carries the real time of day that a date-only property lacks.
+				modifiedPropertyBumpedTo != null &&
+					toDateKey(modifiedPropertyBumpedTo) !== toDateKey(mtime)
+					? modifiedPropertyBumpedTo
+					: mtime,
+			)
+		: previous.editHistory;
 
 	return {
 		isMeaningful,
-		signal,
 		snapshot: {
-			path,
-			folder,
-			title,
-			createdMtime: previous.createdMtime ?? createdMtime,
+			// Keep the stored date when the property is missing: it may be a renamed note's adopted creation date.
+			createdMtime: createdDateMs ?? previous.createdMtime,
 			contentHash,
 			bodyHash,
-			linkHash,
-			propertyHash,
-			tags,
-			lastMeaningfulMtime,
 			lastModifiedPropertyMtime: lastModifiedDateMs,
-			lastContentEditMtime,
-			lastPropertyEditMtime,
-			lastMeaningfulSignal,
+			editHistory,
 		},
 	};
+}
+
+// One entry per local day (the latest edit that day) keeps the history small.
+function recordEdit(history: number[], editedAt: number): number[] {
+	const day = toDateKey(editedAt);
+	const sameDay = history.find((at) => toDateKey(at) === day) ?? editedAt;
+	return [
+		...history.filter((at) => toDateKey(at) !== day),
+		Math.max(sameDay, editedAt),
+	].sort((left, right) => left - right);
 }
