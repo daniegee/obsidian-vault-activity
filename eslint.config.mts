@@ -32,6 +32,9 @@ export default tseslint.config(
 			"@typescript-eslint/no-unsafe-return": "off",
 			"@typescript-eslint/unbound-method": "off",
 			"obsidianmd/no-global-this": "off",
+			// The obsidian mock re-exports the real moment.
+			"import/no-extraneous-dependencies": "off",
+			"@typescript-eslint/no-restricted-imports": "off",
 		},
 	},
 	globalIgnores([

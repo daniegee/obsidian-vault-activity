@@ -1,3 +1,6 @@
+// The real moment that Obsidian re-exports (installed with the obsidian package).
+export { default as moment } from "moment";
+
 export class Plugin {}
 
 export class Notice {

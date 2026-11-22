@@ -128,6 +128,7 @@ export class VaultActivityIndexer {
 			{
 				createdDateProperty: this.settings.createdDateProperty,
 				modifiedDateProperty: this.settings.modifiedDateProperty,
+				dateFormat: this.settings.dateFormat,
 			},
 		);
 		// shortcut: an empty vault's first new note is seeded too, rare enough to accept.

@@ -4,6 +4,7 @@ import { extractFrontmatterDate } from "./common/noteContent";
 const DEFAULT_FRONTMATTER_DATE_PROPERTIES: FrontmatterDateProperties = {
 	createdDateProperty: "Created",
 	modifiedDateProperty: "Last modified",
+	dateFormat: "",
 };
 
 export function parseNoteContent(
@@ -38,10 +39,12 @@ export function parseNoteContent(
 	const createdDateMs = extractFrontmatterDate(
 		frontmatter,
 		resolvedProperties.createdDateProperty,
+		resolvedProperties.dateFormat,
 	);
 	const lastModifiedDateMs = extractFrontmatterDate(
 		frontmatter,
 		resolvedProperties.modifiedDateProperty,
+		resolvedProperties.dateFormat,
 	);
 
 	return {
@@ -63,6 +66,7 @@ function resolveDateProperties(
 			properties?.modifiedDateProperty,
 			DEFAULT_FRONTMATTER_DATE_PROPERTIES.modifiedDateProperty,
 		),
+		dateFormat: properties?.dateFormat?.trim() ?? "",
 	};
 }
 

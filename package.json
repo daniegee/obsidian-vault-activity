@@ -31,6 +31,7 @@
 		"eslint-plugin-obsidianmd": "0.6.0",
 		"globals": "17.14.0",
 		"jiti": "2.7.0",
+		"moment": "2.31.0",
 		"prettier": "^3.10.1",
 		"semantic-release": "^26.0.1",
 		"tslib": "2.9.1",

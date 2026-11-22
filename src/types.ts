@@ -30,6 +30,8 @@ export interface ParsedNoteContent {
 export interface FrontmatterDateProperties {
 	createdDateProperty: string;
 	modifiedDateProperty: string;
+	/** Moment format tried before the built-in parsing; blank for automatic. */
+	dateFormat: string;
 }
 
 export interface ActivityRecord {
@@ -109,6 +111,7 @@ export interface VaultActivityPluginSettings {
 	streakCalculationMode: StreakCalculationMode;
 	createdDateProperty: string;
 	modifiedDateProperty: string;
+	dateFormat: string;
 	autoRefresh: boolean;
 	refreshDebounceMs: number;
 }
@@ -116,6 +119,6 @@ export interface VaultActivityPluginSettings {
 export interface VaultActivityPluginData {
 	settings: VaultActivityPluginSettings;
 	snapshots: Record<string, NoteSnapshot>;
-	/** Date property names the snapshots were parsed with; a change forces a full re-read. */
+	/** Date property names and format the snapshots were parsed with; a change forces a full re-read. */
 	indexedProperties?: string;
 }
