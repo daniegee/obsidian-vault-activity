@@ -2,7 +2,7 @@ import type { FrontmatterDateProperties, ParsedNoteContent } from "../types";
 import { extractFrontmatterDate } from "./common/noteContent";
 
 const DEFAULT_FRONTMATTER_DATE_PROPERTIES: FrontmatterDateProperties = {
-	createdDateProperty: "Date",
+	createdDateProperty: "Created",
 	modifiedDateProperty: "Last modified",
 };
 

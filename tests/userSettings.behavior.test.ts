@@ -74,7 +74,7 @@ describe("user settings behavior", () => {
 			dashboardIncludeFolders: [],
 			dashboardExcludeFolders: ["Templates"],
 			streakCalculationMode: "new-and-modified",
-			createdDateProperty: "Date",
+			createdDateProperty: "Created",
 			modifiedDateProperty: "Last modified",
 			autoRefresh: true,
 			refreshDebounceMs: 400,
@@ -130,7 +130,7 @@ describe("user settings behavior", () => {
 
 	it("ignores a date property left blank instead of reading the default", () => {
 		const parsed = parseNoteContent(
-			"---\nDate: 2024-05-03\nLast modified: 2026-03-14\n---\nBody",
+			"---\nCreated: 2024-05-03\nLast modified: 2026-03-14\n---\nBody",
 			{ createdDateProperty: "", modifiedDateProperty: "  " },
 		);
 

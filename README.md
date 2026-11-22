@@ -63,7 +63,7 @@ The primary goal is to make note capture and maintenance visible. Vault Activity
 | Dashboard include folders | Optional allow-list scope for dashboard widgets and note lists | Empty              |
 | Dashboard exclude folders | Exclude scope used when include list setting is empty          | `Templates`        |
 | Streak calculation mode   | Choose what marks a day active                                 | `new-and-modified` |
-| Created date property     | Frontmatter (property) key for new-note timestamps             | `Date`             |
+| Created date property     | Frontmatter (property) key for new-note timestamps             | `Created`          |
 | Modified date property    | Frontmatter (property) key for modified-note timestamps        | `Last modified`    |
 | Auto-refresh              | Recompute on create, modify, delete, and rename events         | `true`             |
 | Refresh debounce (ms)     | Delay before recomputing after events                          | `400`              |

@@ -173,9 +173,9 @@ describe("activity highlights behavior", () => {
 		expect(result.snapshot.editHistory).toEqual([]);
 	});
 
-	it("[Test-206] uses frontmatter Date for note-created timing when present", () => {
+	it("[Test-206] uses frontmatter Created for note-created timing when present", () => {
 		const result = evaluateNoteActivity(
-			"---\nDate: 2024-05-01\n---\nBody",
+			"---\nCreated: 2024-05-01\n---\nBody",
 			5000,
 			1000,
 			undefined,
