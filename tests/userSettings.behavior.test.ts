@@ -18,12 +18,10 @@ function note(path: string, day: string, folder: string): ActivityRecord {
 		path,
 		title: path.split("/").pop()!.replace(/\.md$/, ""),
 		folder,
-		tags: [],
 		effectiveMtime: new Date(`${day}T12:00:00`).getTime(),
-		lastModifiedPropertyMtime: null,
-		lastContentEditMtime: new Date(`${day}T12:00:00`).getTime(),
-		lastPropertyEditMtime: null,
 		signal: "body-edit",
+		createdMtime: 0,
+		editHistory: [new Date(`${day}T12:00:00`).getTime()],
 	};
 }
 
@@ -76,7 +74,7 @@ describe("user settings behavior", () => {
 			dashboardIncludeFolders: [],
 			dashboardExcludeFolders: ["Templates"],
 			streakCalculationMode: "new-and-modified",
-			createdDateProperty: "Date",
+			createdDateProperty: "Created",
 			modifiedDateProperty: "Last modified",
 			autoRefresh: true,
 			refreshDebounceMs: 400,
@@ -104,7 +102,6 @@ describe("user settings behavior", () => {
 
 	it("[Test-104] uses configured created and modified date properties", () => {
 		const created = evaluateNoteActivity(
-			"Projects/Test.md",
 			"---\ncreated_at: 2024-05-03\n---\nBody",
 			5000,
 			1000,
@@ -123,12 +120,22 @@ describe("user settings behavior", () => {
 			},
 		);
 
-		expect(created.snapshot.lastMeaningfulMtime).toBe(
+		expect(created.snapshot.createdMtime).toBe(
 			new Date(2024, 4, 3).getTime(),
 		);
 		expect(modified.lastModifiedDateMs).toBe(
 			new Date(2026, 2, 14).getTime(),
 		);
+	});
+
+	it("ignores a date property left blank instead of reading the default", () => {
+		const parsed = parseNoteContent(
+			"---\nCreated: 2024-05-03\nLast modified: 2026-03-14\n---\nBody",
+			{ createdDateProperty: "", modifiedDateProperty: "  " },
+		);
+
+		expect(parsed.createdDateMs).toBeNull();
+		expect(parsed.lastModifiedDateMs).toBeNull();
 	});
 
 	it("[Test-105] respects auto-refresh and debounce settings", () => {

@@ -63,7 +63,7 @@ The primary goal is to make note capture and maintenance visible. Vault Activity
 | Dashboard include folders | Optional allow-list scope for dashboard widgets and note lists | Empty              |
 | Dashboard exclude folders | Exclude scope used when include list setting is empty          | `Templates`        |
 | Streak calculation mode   | Choose what marks a day active                                 | `new-and-modified` |
-| Created date property     | Frontmatter (property) key for new-note timestamps             | `Date`             |
+| Created date property     | Frontmatter (property) key for new-note timestamps             | `Created`          |
 | Modified date property    | Frontmatter (property) key for modified-note timestamps        | `Last modified`    |
 | Auto-refresh              | Recompute on create, modify, delete, and rename events         | `true`             |
 | Refresh debounce (ms)     | Delay before recomputing after events                          | `400`              |
@@ -71,8 +71,14 @@ The primary goal is to make note capture and maintenance visible. Vault Activity
 ## Important behavior notes
 
 > [!IMPORTANT]
-> Obsidian provides the current modified time for files, not a full historical timeline of every edit event.
-> The dashboard represents each note's latest known activity position, not a complete per-edit history.
+> Obsidian only exposes a file's current modified time, so Vault Activity keeps its own edit history: each day it detects a body or link change to a note is recorded in the plugin's data. Property (frontmatter) changes alone do not count as edits.
+>
+> - History starts when you install (or upgrade to) a version with edit history. Earlier edits cannot be recovered: existing notes keep their creation date and start with one recorded edit at their modified date property, or none if it isn't set.
+> - Several edits made while Obsidian is closed count as one edit, dated by the file's modified time.
+> - Renames keep a note's history, including notes moved outside Obsidian (matched by identical content and an unchanged modified time, so a note restored by a tool that rewrites file times, such as a git checkout, starts with fresh history).
+> - Folder filters only hide notes from the dashboard. History for notes outside the filters is kept, and edits made while a note is hidden count as one edit when it is shown again.
+> - Deleting a note removes its history from plugin data permanently.
+> - History is stored per device. If you sync plugin data between devices, each device records the edits it sees.
 
 ## Privacy
 
@@ -109,7 +115,7 @@ npm run format         # prettier
 ## Roadmapped improvements
 
 - [ ] Handle wider date format compatibility for frontmatter date fields
-- [ ] Improve determination of 'modified' notes.
+- [x] Improve determination of 'modified' notes (per-day edit history)
 - [ ] Suggest inactive notes for review, updating or deletion
 
 ## Author

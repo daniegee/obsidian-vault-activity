@@ -78,3 +78,15 @@ export class Setting {
 export function setIcon(_el: unknown, _icon: string): void {
 	return;
 }
+
+export function parseFrontMatterTags(
+	frontmatter: { tags?: string | string[] } | null | undefined,
+): string[] | null {
+	const tags = frontmatter?.tags;
+	if (tags == null) {
+		return null;
+	}
+	return (Array.isArray(tags) ? tags : [tags]).map((tag) =>
+		tag.startsWith("#") ? tag : `#${tag}`,
+	);
+}

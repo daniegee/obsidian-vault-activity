@@ -21,15 +21,17 @@ function note(
 		path,
 		title: path.split("/").pop()!.replace(/\.md$/, ""),
 		folder,
-		tags: [],
 		effectiveMtime: new Date(`${day}T12:00:00`).getTime(),
-		lastModifiedPropertyMtime: null,
-		lastContentEditMtime:
-			signal === "note-created"
-				? null
-				: new Date(`${day}T12:00:00`).getTime(),
-		lastPropertyEditMtime: null,
 		signal,
+		// Edited fixtures were created long before any dashboard window.
+		createdMtime:
+			signal === "note-created"
+				? new Date(`${day}T12:00:00`).getTime()
+				: 0,
+		editHistory:
+			signal === "note-created"
+				? []
+				: [new Date(`${day}T12:00:00`).getTime()],
 	};
 }
 
@@ -88,14 +90,12 @@ describe("activity highlights behavior", () => {
 
 	it("[Test-202] classifies frontmatter-only updates as non-body-or-link-content edits", () => {
 		const initial = evaluateNoteActivity(
-			"Projects/Test.md",
 			"---\ntags: [one]\n---\nBody",
 			1000,
 			500,
 			undefined,
 		);
 		const frontmatterOnly = evaluateNoteActivity(
-			"Projects/Test.md",
 			"---\ntags: [one, two]\n---\nBody",
 			2000,
 			500,
@@ -103,37 +103,8 @@ describe("activity highlights behavior", () => {
 		);
 
 		expect(frontmatterOnly.isMeaningful).toBe(false);
-		expect(frontmatterOnly.signal).toBeNull();
-		expect(frontmatterOnly.snapshot.lastMeaningfulMtime).toBe(500);
-		expect(frontmatterOnly.snapshot.lastMeaningfulSignal).toBe(
-			"note-created",
-		);
-		expect(frontmatterOnly.snapshot.lastContentEditMtime).toBeNull();
-		expect(frontmatterOnly.snapshot.lastPropertyEditMtime).toBe(2000);
-
-		const metadataDriven = note(
-			"Projects/Metadata.md",
-			"2026-03-01",
-			"Projects",
-			"note-created",
-		);
-		metadataDriven.lastModifiedPropertyMtime = new Date(
-			"2026-03-14T12:00:00",
-		).getTime();
-		metadataDriven.lastContentEditMtime = null;
-
-		const data = buildDashboardData(
-			[metadataDriven],
-			filters({
-				trendMetric: "modified-notes",
-				selectedDay: "2026-03-14",
-			}),
-		);
-		expect(
-			data.dailyModifiedNotes.find((day) => day.day === "2026-03-14")
-				?.count,
-		).toBe(1);
-		expect(data.selectedDayNotes).toHaveLength(1);
+		expect(frontmatterOnly.snapshot.createdMtime).toBe(500);
+		expect(frontmatterOnly.snapshot.editHistory).toEqual([]);
 	});
 
 	it("[Test-203] does not create modified activity from last-seen-only changes", () => {
@@ -143,9 +114,6 @@ describe("activity highlights behavior", () => {
 			"Projects",
 			"note-created",
 		);
-		openedOnly.lastContentEditMtime = null;
-		openedOnly.lastPropertyEditMtime = null;
-		openedOnly.lastModifiedPropertyMtime = null;
 
 		const data = buildDashboardData(
 			[openedOnly],
@@ -197,61 +165,45 @@ describe("activity highlights behavior", () => {
 		expect(noActionNeeded.summary.streakActionHint).toBeNull();
 	});
 
-	it("[Test-205] emits note-created signal and uses file creation time as activity timestamp", () => {
-		const result = evaluateNoteActivity(
-			"Projects/Test.md",
-			"",
-			1000,
-			500,
-			undefined,
-		);
+	it("[Test-205] uses file creation time for a new note and records no edits", () => {
+		const result = evaluateNoteActivity("", 1000, 500, undefined);
 
 		expect(result.isMeaningful).toBe(true);
-		expect(result.signal).toBe("note-created");
-		expect(result.snapshot.lastMeaningfulMtime).toBe(500);
-		expect(result.snapshot.lastMeaningfulSignal).toBe("note-created");
+		expect(result.snapshot.createdMtime).toBe(500);
+		expect(result.snapshot.editHistory).toEqual([]);
 	});
 
-	it("[Test-206] uses frontmatter Date for note-created timing when present", () => {
+	it("[Test-206] uses frontmatter Created for note-created timing when present", () => {
 		const result = evaluateNoteActivity(
-			"Projects/Test.md",
-			"---\nDate: 2024-05-01\n---\nBody",
+			"---\nCreated: 2024-05-01\n---\nBody",
 			5000,
 			1000,
 			undefined,
 		);
 
-		expect(result.snapshot.lastMeaningfulMtime).toBe(
+		expect(result.snapshot.createdMtime).toBe(
 			new Date(2024, 4, 1).getTime(),
 		);
 	});
 
 	it("[Test-207] stores Last modified separately from note-created timing", () => {
 		const result = evaluateNoteActivity(
-			"Projects/Test.md",
 			"---\nLast modified: 2024-05-01\n---\nBody",
 			5000,
 			1000,
 			undefined,
 		);
 
-		expect(result.snapshot.lastMeaningfulMtime).toBe(1000);
+		expect(result.snapshot.createdMtime).toBe(1000);
 		expect(result.snapshot.lastModifiedPropertyMtime).toBe(
 			new Date(2024, 4, 1).getTime(),
 		);
-		expect(result.snapshot.lastMeaningfulSignal).toBe("note-created");
+		expect(result.snapshot.editHistory).toEqual([]);
 	});
 
-	it("[Test-208] classifies linking edits when links change", () => {
-		const initial = evaluateNoteActivity(
-			"Projects/Test.md",
-			"Body",
-			1000,
-			500,
-			undefined,
-		);
+	it("[Test-208] records an edit when links change", () => {
+		const initial = evaluateNoteActivity("Body", 1000, 500, undefined);
 		const changed = evaluateNoteActivity(
-			"Projects/Test.md",
 			"Body with [[Second Note]]",
 			2000,
 			500,
@@ -259,21 +211,12 @@ describe("activity highlights behavior", () => {
 		);
 
 		expect(changed.isMeaningful).toBe(true);
-		expect(changed.signal).toBe("linking-edit");
-		expect(changed.snapshot.lastMeaningfulSignal).toBe("linking-edit");
-		expect(changed.snapshot.lastMeaningfulMtime).toBe(2000);
+		expect(changed.snapshot.editHistory).toEqual([2000]);
 	});
 
-	it("[Test-209] classifies plain body edits as body-edit", () => {
-		const initial = evaluateNoteActivity(
-			"Projects/Test.md",
-			"Body",
-			1000,
-			500,
-			undefined,
-		);
+	it("[Test-209] records an edit when plain body text changes", () => {
+		const initial = evaluateNoteActivity("Body", 1000, 500, undefined);
 		const changed = evaluateNoteActivity(
-			"Projects/Test.md",
 			"Body changed",
 			2000,
 			500,
@@ -281,23 +224,7 @@ describe("activity highlights behavior", () => {
 		);
 
 		expect(changed.isMeaningful).toBe(true);
-		expect(changed.signal).toBe("body-edit");
-		expect(changed.snapshot.lastMeaningfulSignal).toBe("body-edit");
-		expect(changed.snapshot.lastMeaningfulMtime).toBe(2000);
-	});
-
-	it("[Test-210] extracts tags and links from note content", () => {
-		const parsedTags = parseNoteContent(
-			"---\ntags:\n  - alpha\n  - beta\n---\nBody",
-		);
-		const inlineTags = parseNoteContent("---\ntags: [one, two]\n---\nBody");
-		const parsedLinks = parseNoteContent(
-			"Body with [[Note One]] and [site](https://example.com)",
-		);
-
-		expect(parsedTags.tags).toEqual(["alpha", "beta"]);
-		expect(inlineTags.tags).toEqual(["one", "two"]);
-		expect(parsedLinks.links).toEqual(["https://example.com", "note one"]);
+		expect(changed.snapshot.editHistory).toEqual([2000]);
 	});
 
 	it("[Test-211] extracts Last modified from frontmatter", () => {
@@ -308,48 +235,33 @@ describe("activity highlights behavior", () => {
 	});
 
 	it("[Test-212] uses Last modified as activity timestamp for body or link content edits", () => {
-		const initial = evaluateNoteActivity(
-			"Projects/Test.md",
-			"Body",
-			1000,
-			500,
-			undefined,
-		);
+		const initial = evaluateNoteActivity("Body", 1000, 500, undefined);
 		const changed = evaluateNoteActivity(
-			"Projects/Test.md",
 			"---\nLast modified: 2026-03-14\n---\nBody changed",
 			4000,
 			500,
 			initial.snapshot,
 		);
 
-		expect(changed.snapshot.lastMeaningfulMtime).toBe(
+		expect(changed.snapshot.editHistory).toEqual([
 			new Date(2026, 2, 14).getTime(),
-		);
+		]);
 	});
 
 	it("[Test-213] keeps using file mtime when Last modified is missing", () => {
-		const initial = evaluateNoteActivity(
-			"Projects/Test.md",
-			"Body",
-			1000,
-			500,
-			undefined,
-		);
+		const initial = evaluateNoteActivity("Body", 1000, 500, undefined);
 		const changed = evaluateNoteActivity(
-			"Projects/Test.md",
 			"Body changed",
 			2000,
 			500,
 			initial.snapshot,
 		);
 
-		expect(changed.snapshot.lastMeaningfulMtime).toBe(2000);
+		expect(changed.snapshot.editHistory).toEqual([2000]);
 	});
 
-	it("[Test-214] does not treat Last modified changes as fallback property edits", () => {
+	it("[Test-214] does not record an edit when only Last modified changes", () => {
 		const initial = evaluateNoteActivity(
-			"Projects/Test.md",
 			"---\nLast modified: 2026-03-13\n---\nBody",
 			1000,
 			500,
@@ -357,23 +269,20 @@ describe("activity highlights behavior", () => {
 		);
 
 		const changed = evaluateNoteActivity(
-			"Projects/Test.md",
 			"---\nLast modified: 2026-03-14\n---\nBody",
 			2000,
 			500,
 			initial.snapshot,
 		);
 
-		expect(changed.signal).toBeNull();
 		expect(changed.snapshot.lastModifiedPropertyMtime).toBe(
 			new Date(2026, 2, 14).getTime(),
 		);
-		expect(changed.snapshot.lastPropertyEditMtime).toBeNull();
+		expect(changed.snapshot.editHistory).toEqual([]);
 	});
 
 	it("[Test-215] uses configured created date property for note-created timing", () => {
 		const result = evaluateNoteActivity(
-			"Projects/Test.md",
 			"---\ncreated_at: 2024-05-03\n---\nBody",
 			5000,
 			1000,
@@ -381,7 +290,7 @@ describe("activity highlights behavior", () => {
 			customDateProperties,
 		);
 
-		expect(result.snapshot.lastMeaningfulMtime).toBe(
+		expect(result.snapshot.createdMtime).toBe(
 			new Date(2024, 4, 3).getTime(),
 		);
 	});
@@ -395,9 +304,8 @@ describe("activity highlights behavior", () => {
 		expect(parsed.lastModifiedDateMs).toBe(new Date(2026, 2, 14).getTime());
 	});
 
-	it("[Test-217] does not treat configured modified property as fallback property edits", () => {
+	it("[Test-217] does not record an edit when only the configured modified property changes", () => {
 		const initial = evaluateNoteActivity(
-			"Projects/Test.md",
 			"---\nupdated_at: 2026-03-13\n---\nBody",
 			1000,
 			500,
@@ -406,7 +314,6 @@ describe("activity highlights behavior", () => {
 		);
 
 		const changed = evaluateNoteActivity(
-			"Projects/Test.md",
 			"---\nupdated_at: 2026-03-14\n---\nBody",
 			2000,
 			500,
@@ -414,10 +321,9 @@ describe("activity highlights behavior", () => {
 			customDateProperties,
 		);
 
-		expect(changed.signal).toBeNull();
 		expect(changed.snapshot.lastModifiedPropertyMtime).toBe(
 			new Date(2026, 2, 14).getTime(),
 		);
-		expect(changed.snapshot.lastPropertyEditMtime).toBeNull();
+		expect(changed.snapshot.editHistory).toEqual([]);
 	});
 });

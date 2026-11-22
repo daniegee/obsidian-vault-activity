@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { buildDashboardData } from "../src/indexer/aggregates";
+import { evaluateNoteActivity } from "../src/indexer/noteActivityEvaluator";
 import type { ActivityRecord, FilterState } from "../src/types";
 
 function note(
@@ -13,15 +14,17 @@ function note(
 		path,
 		title: path.split("/").pop()!.replace(/\.md$/, ""),
 		folder,
-		tags: [],
 		effectiveMtime: new Date(`${day}T12:00:00`).getTime(),
-		lastModifiedPropertyMtime: null,
-		lastContentEditMtime:
-			signal === "note-created"
-				? null
-				: new Date(`${day}T12:00:00`).getTime(),
-		lastPropertyEditMtime: null,
 		signal,
+		// Edited fixtures were created long before any dashboard window.
+		createdMtime:
+			signal === "note-created"
+				? new Date(`${day}T12:00:00`).getTime()
+				: 0,
+		editHistory:
+			signal === "note-created"
+				? []
+				: [new Date(`${day}T12:00:00`).getTime()],
 	};
 }
 
@@ -38,66 +41,32 @@ function filters(overrides: Partial<FilterState> = {}): FilterState {
 }
 
 describe("activity trends behavior", () => {
-	it("[Test-301] uses modified timestamp priority for trend projection", () => {
-		const byProperty = note(
-			"P.md",
-			"2026-02-01",
-			"Projects",
-			"note-created",
-		);
-		byProperty.lastModifiedPropertyMtime = new Date(
-			"2026-03-10T10:00:00",
-		).getTime();
-		byProperty.lastContentEditMtime = new Date(
-			"2026-03-12T10:00:00",
-		).getTime();
-		byProperty.lastPropertyEditMtime = new Date(
-			"2026-03-14T10:00:00",
-		).getTime();
+	it("[Test-301] dates an edit by a modified property bumped with it, else by file mtime", () => {
+		const base = evaluateNoteActivity(
+			"Body",
+			1000,
+			500,
+			undefined,
+		).snapshot;
+		const mtime = new Date("2026-03-12T10:00:00").getTime();
 
-		const byContent = note(
-			"C.md",
-			"2026-02-01",
-			"Projects",
-			"note-created",
-		);
-		byContent.lastModifiedPropertyMtime = null;
-		byContent.lastContentEditMtime = new Date(
-			"2026-03-11T10:00:00",
-		).getTime();
-		byContent.lastPropertyEditMtime = new Date(
-			"2026-03-14T10:00:00",
-		).getTime();
+		const byProperty = evaluateNoteActivity(
+			"---\nLast modified: 2026-03-10\n---\nBody v2",
+			mtime,
+			500,
+			base,
+		).snapshot;
+		const byMtime = evaluateNoteActivity(
+			"Body v2",
+			mtime,
+			500,
+			base,
+		).snapshot;
 
-		const byPropertyEdit = note(
-			"E.md",
-			"2026-02-01",
-			"Projects",
-			"note-created",
-		);
-		byPropertyEdit.lastModifiedPropertyMtime = null;
-		byPropertyEdit.lastContentEditMtime = null;
-		byPropertyEdit.lastPropertyEditMtime = new Date(
-			"2026-03-13T10:00:00",
-		).getTime();
-
-		const data = buildDashboardData(
-			[byProperty, byContent, byPropertyEdit],
-			filters({ trendMetric: "modified-notes" }),
-		);
-
-		expect(
-			data.dailyModifiedNotes.find((day) => day.day === "2026-03-10")
-				?.count,
-		).toBe(1);
-		expect(
-			data.dailyModifiedNotes.find((day) => day.day === "2026-03-11")
-				?.count,
-		).toBe(1);
-		expect(
-			data.dailyModifiedNotes.find((day) => day.day === "2026-03-13")
-				?.count,
-		).toBe(1);
+		expect(byProperty.editHistory).toEqual([
+			new Date(2026, 2, 10).getTime(),
+		]);
+		expect(byMtime.editHistory).toEqual([mtime]);
 	});
 
 	it("[Test-302] switches selected records when trend metric changes", () => {

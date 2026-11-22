@@ -1,36 +1,19 @@
 import type { ActivityRecord } from "../../types";
 
-export function toModifiedRecord(note: ActivityRecord): ActivityRecord | null {
-	const modifiedPropertyMtime = note.lastModifiedPropertyMtime ?? null;
-	if (modifiedPropertyMtime != null) {
-		return {
-			...note,
-			effectiveMtime: modifiedPropertyMtime,
-			signal: note.signal === "note-created" ? "body-edit" : note.signal,
-		};
-	}
+/** The note's creation event; it stays put after later edits change the note's signal. */
+export function toCreatedRecord(note: ActivityRecord): ActivityRecord {
+	return {
+		...note,
+		effectiveMtime: note.createdMtime,
+		signal: "note-created",
+	};
+}
 
-	const contentEditMtime = note.lastContentEditMtime ?? null;
-	if (contentEditMtime != null) {
-		return {
-			...note,
-			effectiveMtime: contentEditMtime,
-			signal: note.signal === "note-created" ? "body-edit" : note.signal,
-		};
-	}
-
-	const propertyEditMtime = note.lastPropertyEditMtime ?? null;
-	if (propertyEditMtime != null) {
-		return {
-			...note,
-			effectiveMtime: propertyEditMtime,
-			signal: note.signal === "note-created" ? "body-edit" : note.signal,
-		};
-	}
-
-	if (note.signal !== "note-created") {
-		return note;
-	}
-
-	return null;
+/** One record per day the note was edited. */
+export function toModifiedRecords(note: ActivityRecord): ActivityRecord[] {
+	return note.editHistory.map((editedAt) => ({
+		...note,
+		effectiveMtime: editedAt,
+		signal: "body-edit",
+	}));
 }

@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import { buildDashboardData } from "../src/indexer/aggregates";
 import type { ActivityRecord, FilterState } from "../src/types";
+import { renderDrillDownPanel } from "../src/ui/components/DrillDownPanel";
+import { MockElement } from "./mocks/dom";
 
 function note(
 	path: string,
@@ -13,15 +15,17 @@ function note(
 		path,
 		title: path.split("/").pop()!.replace(/\.md$/, ""),
 		folder,
-		tags: [],
 		effectiveMtime: new Date(`${day}T12:00:00`).getTime(),
-		lastModifiedPropertyMtime: null,
-		lastContentEditMtime:
-			signal === "note-created"
-				? null
-				: new Date(`${day}T12:00:00`).getTime(),
-		lastPropertyEditMtime: null,
 		signal,
+		// Edited fixtures were created long before any dashboard window.
+		createdMtime:
+			signal === "note-created"
+				? new Date(`${day}T12:00:00`).getTime()
+				: 0,
+		editHistory:
+			signal === "note-created"
+				? []
+				: [new Date(`${day}T12:00:00`).getTime()],
 	};
 }
 
@@ -116,5 +120,25 @@ describe("drill-down behavior", () => {
 			}),
 		);
 		expect(allTimeSelected.selectedDayNotes.length).toBeGreaterThan(0);
+	});
+
+	it("[Test-210] shows each listed note's tags from the lookup it is given", () => {
+		const data = buildDashboardData(
+			[note("Projects/New.md", "2026-03-10", "Projects", "note-created")],
+			filters({ selectedDay: "2026-03-10" }),
+		);
+		const container = new MockElement("div");
+
+		renderDrillDownPanel(container as unknown as HTMLElement, {
+			data,
+			onOpenNote: async () => {},
+			getTags: (path) => (path === "Projects/New.md" ? ["#alpha"] : []),
+		});
+
+		expect(
+			container
+				.findByClass("vault-activity-note-tag")
+				.map((tag) => tag.textContent),
+		).toEqual(["#alpha"]);
 	});
 });
