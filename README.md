@@ -68,6 +68,9 @@ The primary goal is to make note capture and maintenance visible. Vault Activity
 | Auto-refresh              | Recompute on create, modify, delete, and rename events         | `true`             |
 | Refresh debounce (ms)     | Delay before recomputing after events                          | `400`              |
 
+> [!TIP]
+> For the most accurate modified-note activity, use Vault Activity alongside the [Update modified date](https://community.obsidian.md/plugins/frontmatter-modified-date) plugin. It keeps a modified timestamp in each note's frontmatter up to date as you edit. Set Vault Activity's **Modified date property** to the same key so the two plugins work together.
+
 ## Important behavior notes
 
 > [!IMPORTANT]
