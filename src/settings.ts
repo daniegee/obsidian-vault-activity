@@ -17,6 +17,7 @@ export const DEFAULT_SETTINGS: VaultActivityPluginSettings = {
 	streakCalculationMode: "new-and-modified",
 	createdDateProperty: "Created",
 	modifiedDateProperty: "Last modified",
+	dateFormat: "",
 	autoRefresh: true,
 	refreshDebounceMs: 400,
 };
@@ -55,6 +56,10 @@ const SETTING_COPY: Record<SettingKey, { name: string; desc: string }> = {
 		name: "Modified date property",
 		desc: "Frontmatter property used to timestamp modified-note activity for trends and drill-down lists. Leave blank to ignore.",
 	},
+	dateFormat: {
+		name: "Date format",
+		desc: "Format of your frontmatter dates, e.g. DD/MM/YYYY, MM/DD/YYYY or X for Unix seconds (Moment.js syntax). Leave blank to detect automatically: ISO dates always work, and numeric dates that could be read either way are ignored.",
+	},
 	autoRefresh: {
 		name: "Auto refresh",
 		desc: "Refresh dashboard data after file create, modify, delete, or rename events.",
@@ -72,6 +77,7 @@ const REFRESH_REASONS: Partial<Record<SettingKey, string>> = {
 	streakCalculationMode: "settings:streak-calculation-mode",
 	createdDateProperty: "settings:created-date-property",
 	modifiedDateProperty: "settings:modified-date-property",
+	dateFormat: "settings:date-format",
 };
 
 const TEXTAREA_ROWS = 4;
@@ -142,6 +148,14 @@ export class VaultActivitySettingTab extends PluginSettingTab {
 						},
 					},
 					{
+						...copy.dateFormat,
+						control: {
+							type: "text",
+							key: "dateFormat",
+							placeholder: "Automatic",
+						},
+					},
+					{
 						...copy.autoRefresh,
 						control: { type: "toggle", key: "autoRefresh" },
 					},
@@ -186,6 +200,7 @@ export class VaultActivitySettingTab extends PluginSettingTab {
 				break;
 			case "createdDateProperty":
 			case "modifiedDateProperty":
+			case "dateFormat":
 				settings[key] = text.trim();
 				break;
 			case "streakCalculationMode":
@@ -269,13 +284,15 @@ export class VaultActivitySettingTab extends PluginSettingTab {
 			key:
 				| "createdDateProperty"
 				| "modifiedDateProperty"
+				| "dateFormat"
 				| "refreshDebounceMs",
+			placeholder = String(DEFAULT_SETTINGS[key]),
 		) =>
 			new Setting(containerEl)
 				.setName(copy[key].name)
 				.setDesc(copy[key].desc)
 				.addText((text) => {
-					text.setPlaceholder(String(DEFAULT_SETTINGS[key]))
+					text.setPlaceholder(placeholder)
 						.setValue(String(settings[key]))
 						.onChange(
 							(value) => void this.applySetting(key, value),
@@ -284,6 +301,7 @@ export class VaultActivitySettingTab extends PluginSettingTab {
 
 		textSetting("createdDateProperty");
 		textSetting("modifiedDateProperty");
+		textSetting("dateFormat", "Automatic");
 
 		new Setting(containerEl)
 			.setName(copy.autoRefresh.name)

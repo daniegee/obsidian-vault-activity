@@ -65,11 +65,23 @@ The primary goal is to make note capture and maintenance visible. Vault Activity
 | Streak calculation mode   | Choose what marks a day active                                 | `new-and-modified` |
 | Created date property     | Frontmatter (property) key for new-note timestamps             | `Created`          |
 | Modified date property    | Frontmatter (property) key for modified-note timestamps        | `Last modified`    |
+| Date format               | Moment.js format of your frontmatter dates (e.g. `DD/MM/YYYY`) | Blank (automatic)  |
 | Auto-refresh              | Recompute on create, modify, delete, and rename events         | `true`             |
 | Refresh debounce (ms)     | Delay before recomputing after events                          | `400`              |
 
 > [!TIP]
 > For the most accurate modified-note activity, use Vault Activity alongside the [Update modified date](https://community.obsidian.md/plugins/frontmatter-modified-date) plugin. It keeps a modified timestamp in each note's frontmatter up to date as you edit. Set Vault Activity's **Modified date property** to the same key so the two plugins work together.
+
+### Frontmatter date formats
+
+Dates are read in this order, first match wins:
+
+1. Your **Date format**, if set. Any [Moment.js format](https://momentjs.com/docs/#/parsing/string-format/) works, including `X` (Unix seconds) and `x` (milliseconds). Month names are read in Obsidian's language.
+2. ISO 8601, such as `2024-01-15`, `2024-01-15T10:30` or `2024-01-15T10:30-05:00` (what Obsidian's date properties write).
+3. Numeric dates such as `15/01/2024`, `15.01.2024` or `1-15-2024`. If both day-first and month-first readings are valid (`03/04/2024`), the date is ignored rather than guessed. Set **Date format** to resolve these.
+4. English text dates such as `January 15, 2024`.
+
+Dates keep the time they were written with. A time offset only identifies the timezone it was written in, so `2024-01-15T23:30-05:00` counts as 15 January at 23:30 wherever you open the vault. Invalid or ignored dates fall back to the file's own timestamps.
 
 ## Important behavior notes
 

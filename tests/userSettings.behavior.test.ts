@@ -76,6 +76,7 @@ describe("user settings behavior", () => {
 			streakCalculationMode: "new-and-modified",
 			createdDateProperty: "Created",
 			modifiedDateProperty: "Last modified",
+			dateFormat: "",
 			autoRefresh: true,
 			refreshDebounceMs: 400,
 		});

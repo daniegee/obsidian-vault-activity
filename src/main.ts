@@ -135,7 +135,7 @@ export default class VaultActivityPlugin extends Plugin {
 			do {
 				this.rescanRequested = false;
 				applyRenames(this.snapshots, this.pendingRenames.splice(0));
-				const properties = `${this.settings.createdDateProperty}|${this.settings.modifiedDateProperty}`;
+				const properties = `${this.settings.createdDateProperty}|${this.settings.modifiedDateProperty}|${this.settings.dateFormat}`;
 				const indexer = new VaultActivityIndexer(
 					this.app.vault,
 					this.settings,

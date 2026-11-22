@@ -1,4 +1,8 @@
-const ISO_DATE_REGEX = /^(\d{4})-(\d{2})-(\d{2})$/;
+import { moment } from "obsidian";
+
+// d/m/y or m/d/y with a consistent separator and an optional time.
+const NUMERIC_DATE_REGEX =
+	/^(\d{1,2})([./-])(\d{1,2})\2(\d{4})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?$/;
 
 export function hashString(value: string): string {
 	let hash = 2166136261;
@@ -25,6 +29,7 @@ export function extractTitle(path: string): string {
 export function extractFrontmatterDate(
 	frontmatter: string,
 	propertyName: string,
+	dateFormat = "",
 ): number | null {
 	const lines = frontmatter.split("\n");
 	const normalizedTarget = normalizeFrontmatterKey(propertyName);
@@ -48,7 +53,7 @@ export function extractFrontmatterDate(
 			continue;
 		}
 
-		return parseFrontmatterDateValue(rawValue);
+		return parseFrontmatterDateValue(rawValue, dateFormat);
 	}
 
 	return null;
@@ -68,7 +73,10 @@ function normalizeFrontmatterKey(rawKey: string): string {
 	return normalizedSeparators.split(/\s+/).filter(Boolean).join(" ");
 }
 
-function parseFrontmatterDateValue(rawValue: string): number | null {
+function parseFrontmatterDateValue(
+	rawValue: string,
+	dateFormat: string,
+): number | null {
 	let value = rawValue.trim();
 
 	if (value.length === 0) {
@@ -82,15 +90,48 @@ function parseFrontmatterDateValue(rawValue: string): number | null {
 		value = value.slice(1, -1).trim();
 	}
 
-	const isoDate = ISO_DATE_REGEX.exec(value);
-	if (isoDate) {
-		const year = Number(isoDate[1]);
-		const month = Number(isoDate[2]);
-		const day = Number(isoDate[3]);
-		const parsed = new Date(year, month - 1, day).getTime();
-		return Number.isFinite(parsed) ? parsed : null;
+	const formats = dateFormat
+		? [dateFormat, moment.ISO_8601]
+		: [moment.ISO_8601];
+	for (const format of formats) {
+		const parsed = moment.parseZone(value, format, true);
+		if (parsed.isValid()) {
+			// Keep the written wall-clock time so the day never shifts with the viewer's timezone.
+			return parsed.local(true).valueOf();
+		}
+	}
+
+	const numeric = NUMERIC_DATE_REGEX.exec(value);
+	if (numeric) {
+		return parseNumericDate(numeric);
 	}
 
 	const parsed = Date.parse(value);
 	return Number.isFinite(parsed) ? parsed : null;
+}
+
+function parseNumericDate(match: RegExpExecArray): number | null {
+	const [
+		first = 0,
+		second = 0,
+		year = 0,
+		hours = 0,
+		minutes = 0,
+		seconds = 0,
+	] = [1, 3, 4, 5, 6, 7].map((group) => Number(match[group] ?? 0));
+	const toLocal = (month: number, day: number): number | null => {
+		const date = new Date(year, month - 1, day, hours, minutes, seconds);
+		// Date rolls overflow into the next month or day, so a mismatch means invalid.
+		const valid = date.getMonth() === month - 1 && date.getDate() === day;
+		return valid ? date.getTime() : null;
+	};
+	const dayFirst = toLocal(second, first);
+	const monthFirst = toLocal(first, second);
+
+	// Both readings fit (e.g. 03/04/2024): unknown beats a wrong guess.
+	if (dayFirst != null && monthFirst != null && first !== second) {
+		return null;
+	}
+
+	return dayFirst ?? monthFirst;
 }
