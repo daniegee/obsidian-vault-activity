@@ -48,7 +48,9 @@ export class VaultActivityIndexer {
 				const kept = this.previousSnapshots[path];
 				if (kept) {
 					nextSnapshots[path] = kept;
-				} else if (orphans.some((o) => o.fileMtime === file.stat.mtime)) {
+				} else if (
+					orphans.some((o) => o.fileMtime === file.stat.mtime)
+				) {
 					// Moved into a hidden folder while closed: keep its history, unevaluated.
 					try {
 						const moved = adoptOrphan(
@@ -66,7 +68,12 @@ export class VaultActivityIndexer {
 				continue;
 			}
 
-			const snapshot = await this.scanFile(file, path, orphans, firstIndex);
+			const snapshot = await this.scanFile(
+				file,
+				path,
+				orphans,
+				firstIndex,
+			);
 			if (!snapshot) {
 				continue;
 			}
@@ -111,11 +118,7 @@ export class VaultActivityIndexer {
 			return previous;
 		}
 
-		previous ??= adoptOrphan(
-			orphans,
-			hashString(content),
-			file.stat.mtime,
-		);
+		previous ??= adoptOrphan(orphans, hashString(content), file.stat.mtime);
 		const seed = firstIndex && !previous;
 		const { snapshot } = evaluateNoteActivity(
 			content,
@@ -214,7 +217,8 @@ function adoptOrphan(
 ): NoteSnapshot | undefined {
 	const index = orphans.findIndex(
 		(orphan) =>
-			orphan.contentHash === contentHash && orphan.fileMtime === fileMtime,
+			orphan.contentHash === contentHash &&
+			orphan.fileMtime === fileMtime,
 	);
 	return index === -1 ? undefined : orphans.splice(index, 1)[0];
 }

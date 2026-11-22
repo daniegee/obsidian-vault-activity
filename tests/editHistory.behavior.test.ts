@@ -105,7 +105,7 @@ describe("edit history", () => {
 		);
 
 		expect(edited.editHistory).toHaveLength(1);
-		expect(new Date(edited.editHistory![0]!).getDate()).toBe(10);
+		expect(new Date(edited.editHistory[0]!).getDate()).toBe(10);
 	});
 
 	it("keeps the edit's time of day when a date-only modified property names the same day", () => {
@@ -175,9 +175,18 @@ describe("edit history", () => {
 
 	it.each([
 		[{ lastModifiedPropertyMtime: 500, lastContentEditMtime: 200 }, [500]],
-		[{ lastMeaningfulMtime: 300, lastMeaningfulSignal: "body-edit" }, [300]],
-		[{ lastMeaningfulMtime: 300, lastMeaningfulSignal: "linking-edit" }, [300]],
-		[{ lastMeaningfulMtime: 300, lastMeaningfulSignal: "note-created" }, []],
+		[
+			{ lastMeaningfulMtime: 300, lastMeaningfulSignal: "body-edit" },
+			[300],
+		],
+		[
+			{ lastMeaningfulMtime: 300, lastMeaningfulSignal: "linking-edit" },
+			[300],
+		],
+		[
+			{ lastMeaningfulMtime: 300, lastMeaningfulSignal: "note-created" },
+			[],
+		],
 		[{ lastPropertyEditMtime: 400 }, []],
 	])("seeds legacy fields %j as %j", (legacy, expected) => {
 		const stored = readSnapshots({
@@ -186,7 +195,7 @@ describe("edit history", () => {
 				contentHash: "c",
 				bodyHash: "b",
 				...legacy,
-			} as any,
+			},
 		});
 
 		expect(stored["Note.md"]!.editHistory).toEqual(expected);
@@ -199,7 +208,7 @@ describe("edit history", () => {
 				contentHash: "c",
 				bodyHash: "b",
 				lastModifiedPropertyMtime: 500,
-			} as any,
+			},
 		});
 
 		expect(stored["Note.md"]!.editHistory).toEqual([500]);

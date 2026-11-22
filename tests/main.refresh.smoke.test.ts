@@ -103,6 +103,9 @@ describe("main refresh orchestration smoke", () => {
 		(plugin as any).scheduleRefresh = vi.fn();
 		(plugin as any).saveData = vi.fn().mockResolvedValue(undefined);
 		(plugin as any).app = { vault: {} };
+		const changes = plugin as unknown as {
+			handleVaultChange: (reason: string, file: unknown) => void;
+		};
 
 		const scanResult = () => ({
 			snapshots: {
@@ -117,7 +120,7 @@ describe("main refresh orchestration smoke", () => {
 			.mockImplementationOnce(async () => {
 				// refreshInFlight is only assigned after fullScan's first synchronous run.
 				await Promise.resolve();
-				(plugin as any).handleVaultChange("delete", {
+				changes.handleVaultChange("delete", {
 					path: "X.md",
 					extension: "md",
 				});
@@ -131,7 +134,7 @@ describe("main refresh orchestration smoke", () => {
 		expect(plugin.snapshots["Y.md"]).toBeDefined();
 
 		// A delete with no scan in flight is not remembered.
-		(plugin as any).handleVaultChange("delete", { path: "Y.md" });
+		changes.handleVaultChange("delete", { path: "Y.md" });
 		expect((plugin as any).deletedDuringScan).toEqual([]);
 	});
 

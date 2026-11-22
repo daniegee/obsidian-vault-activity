@@ -70,6 +70,6 @@ function normalizePropertyName(
 	value: string | undefined,
 	fallback: string,
 ): string {
-	const trimmed = value?.trim();
-	return trimmed && trimmed.length > 0 ? trimmed : fallback;
+	// Blank is the user opting out of the property, so it is not swapped for the default.
+	return value === undefined ? fallback : value.trim();
 }

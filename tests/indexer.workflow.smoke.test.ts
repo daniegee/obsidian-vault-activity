@@ -142,7 +142,9 @@ describe("vault indexer workflow smoke", () => {
 
 	it("re-reads a file whose size changed even though its mtime did not", async () => {
 		const first = await new VaultActivityIndexer(
-			fakeVault([{ path: "A.md", mtime: 5000 }], { "A.md": "Body" }) as any,
+			fakeVault([{ path: "A.md", mtime: 5000 }], {
+				"A.md": "Body",
+			}) as any,
 			DEFAULT_SETTINGS,
 			{},
 			true,
@@ -379,7 +381,10 @@ describe("vault indexer workflow smoke", () => {
 			DEFAULT_SETTINGS,
 			{},
 		).fullScan();
-		const orphan = { ...before.snapshots["Untitled.md"]!, editHistory: [1] };
+		const orphan = {
+			...before.snapshots["Untitled.md"]!,
+			editHistory: [1],
+		};
 
 		const after = await new VaultActivityIndexer(
 			fakeVault([{ path: "Untitled 1.md", mtime: 9000 }], {}) as any,
@@ -420,7 +425,9 @@ describe("vault indexer workflow smoke", () => {
 	it("seeds each note's modified property as one edit on a fresh install", async () => {
 		const content = "---\nLast modified: 2026-03-10\n---\nBody";
 		const result = await new VaultActivityIndexer(
-			fakeVault([{ path: "a.md", mtime: 5000 }], { "a.md": content }) as any,
+			fakeVault([{ path: "a.md", mtime: 5000 }], {
+				"a.md": content,
+			}) as any,
 			DEFAULT_SETTINGS,
 			{},
 		).fullScan();
@@ -434,7 +441,9 @@ describe("vault indexer workflow smoke", () => {
 		const content = "---\nLast modified: 2026-03-10\n---\nBody";
 		const other = (
 			await new VaultActivityIndexer(
-				fakeVault([{ path: "b.md", mtime: 7000 }], { "b.md": "Other" }) as any,
+				fakeVault([{ path: "b.md", mtime: 7000 }], {
+					"b.md": "Other",
+				}) as any,
 				DEFAULT_SETTINGS,
 				{},
 			).fullScan()

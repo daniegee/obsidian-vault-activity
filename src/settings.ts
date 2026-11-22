@@ -15,7 +15,7 @@ export const DEFAULT_SETTINGS: VaultActivityPluginSettings = {
 	dashboardIncludeFolders: [],
 	dashboardExcludeFolders: ["Templates"],
 	streakCalculationMode: "new-and-modified",
-	createdDateProperty: "Date",
+	createdDateProperty: "Created",
 	modifiedDateProperty: "Last modified",
 	autoRefresh: true,
 	refreshDebounceMs: 400,
@@ -49,11 +49,11 @@ const SETTING_COPY: Record<SettingKey, { name: string; desc: string }> = {
 	},
 	createdDateProperty: {
 		name: "Created date property",
-		desc: "Frontmatter property used to timestamp new-note activity for trends and drill-down lists (falls back to file creation time when missing or invalid).",
+		desc: "Frontmatter property used to timestamp new-note activity for trends and drill-down lists (falls back to file creation time when missing or invalid). Leave blank to ignore.",
 	},
 	modifiedDateProperty: {
 		name: "Modified date property",
-		desc: "Frontmatter property used to timestamp modified-note activity for trends and drill-down lists.",
+		desc: "Frontmatter property used to timestamp modified-note activity for trends and drill-down lists. Leave blank to ignore.",
 	},
 	autoRefresh: {
 		name: "Auto refresh",
